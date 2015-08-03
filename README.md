@@ -2,7 +2,7 @@
 
 Userscript which provides example Chinese sentences. When reviewing new/forgotton words you get the following:
 
-- example mandarin sentences from LINE dictionary
+- example Mandarin Chinese sentences from LINE dictionary
 - toggle to show pinyin and english translation
 - navigation buttons to cycle through examples
 
