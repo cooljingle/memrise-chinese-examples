@@ -43,7 +43,7 @@
     $("#boxes").bind("DOMSubtreeModified", function() {
         if (MEMRISE.garden.box.start_time > lastRetrieved) {
             lastRetrieved = MEMRISE.garden.box.start_time;
-            word = $('.row.column:has(.row-label:contains(Chinese)) .primary-value').text().trim();
+            word = MEMRISE.garden.boxes.current().thing.columns[1].val;
             if (!word) {
                 return;
             }
