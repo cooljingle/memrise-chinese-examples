@@ -3,7 +3,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          http://www.memrise.com/course/*/garden/*
 // @match          http://www.memrise.com/garden/review/*
-// @version        0.1.0
+// @version        0.1.1
 // @grant          none
 // ==/UserScript==
 
