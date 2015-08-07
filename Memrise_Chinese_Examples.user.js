@@ -1,13 +1,18 @@
 // ==UserScript==
 // @name           Memrise Chinese Examples
+// @namespace      https://github.com/cooljingle
 // @description    Example sentences for learning Chinese on Memrise
 // @match          http://www.memrise.com/course/*/garden/*
 // @match          http://www.memrise.com/garden/review/*
-// @version        0.1.1
+// @version        0.1.2
+// @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
+// @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
 // ==/UserScript==
 
 (function() {
+    console.log("Loaded Memrise Chinese Examples userscript");
+    
     var exampleIndex,
         cachedData,
         word,
@@ -45,6 +50,7 @@
             lastRetrieved = MEMRISE.garden.box.start_time;
             word = MEMRISE.garden.boxes.current().thing.columns[1].val;
             if (!word) {
+                console.log("no word found!");
                 return;
             }
             if (!!$('.show-chosen-mem, .choosing-mem')[0]) {
@@ -66,6 +72,7 @@
     }
 
     function loadDOM() {
+        console.log("loading example sentence DOM");
         $('.columns').append(html);
         setClickEvents();
     }
@@ -106,6 +113,7 @@
     }
 
     function showExample(shouldLoadDOM) {
+        console.log("showing example for word: " + word);
         function updateDOM() {
             if (shouldLoadDOM) {
                 loadDOM();
@@ -118,7 +126,9 @@
             pageNo++;
             $("#next-example").hide();
             var url = getUrl(encodeURIComponent(word), pageNo);
+            console.log("fetching examples from LINE dictionary, url = " + url);
             $.get(url, function(data) {
+                console.log("examples fetched, total number of examples: " + data.total);
                 if (data.total !== 0) {
                     onDataLoaded(data);
                     updateDOM();
