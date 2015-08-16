@@ -5,6 +5,12 @@ Userscript which provides example Chinese sentences. When reviewing new/forgotto
 - example Mandarin Chinese sentences from LINE dictionary
 - toggle to show pinyin and english translation
 - navigation buttons to cycle through examples
+- word colouring by HSK level provided by http://hskhsk.pythonanywhere.com/hanzi
+- keyboard shortcuts:
+    * change font size - increase: **+** or **=**; decrease - **-** or **-** (dash/minus)
+    * toggle example details (pinyin, translation) - **insert**
+    * navigate examples - **,** and **.**
+
 
 ### Installation
 
