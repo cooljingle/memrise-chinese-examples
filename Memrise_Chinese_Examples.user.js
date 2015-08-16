@@ -4,11 +4,18 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          http://www.memrise.com/course/*/garden/*
 // @match          http://www.memrise.com/garden/review/*
-// @version        0.1.3
+// @version        0.1.4
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
 // ==/UserScript==
+
+// SHORTCUTS:
+//  plus/equals |   increase font size
+//  minus/dash  |   decrease font size
+//  insert      |   toggle example details (pinyin, translation)
+//  full stop   |   next example
+//  comma       |   previous example
 
 (function() {
     MEMRISE.garden.boxes.load = (function() {
@@ -20,12 +27,13 @@
                 enableExamples();
             }
             return result;
-        };      
+        };
     }());
 
     function enableExamples() {
         var exampleIndex,
             cachedData,
+            fontSizeOffset = 7, //change this number to alter the default font size of examples (measured in pixels from default); 
             word,
             pageNo,
             pageSize = 20,
@@ -58,23 +66,74 @@
             word = MEMRISE.garden.boxes.current().thing.columns[1].val;
             resetLocalVars();
             showExample(true);
+            shiftExampleFontSize(fontSizeOffset);
         });
 
         addToBox("CopyTypingBox", function() {
             showExample(true);
         });
-        
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        function addHskColours(examples) {
+            var payload = _.chain(examples).map(function(e) {
+                return $.parseHTML(e.exampleAutolink);
+            }).flatten().map(function(e) {
+                return $(e).attr('data-query');
+            }).value().join("%0D%0A");
+
+            $.get("http://crossorigin.me/" + "http://hskhsk.pythonanywhere.com/hanzi?ignoredefaults=true&analysehskwords=true&format=oneperline&hanzi=" + payload)
+                .complete(function(data) {
+                    var hskHtml = $(data.responseText).filter('*.box');
+                    var hskLevels = [];
+
+                    _.each(hskHtml, function(item) {
+                        var i = $(item),
+                            title = i.find('.title').text(),
+                            words = i.find('textarea').text().split("\n");
+                        hskLevels.push({
+                            "name": title,
+                            "words": words
+                        });
+                    });
+
+                    _.each(examples, function(example) {
+                        example.exampleAutolink = _.map($.parseHTML(example.exampleAutolink), function(word) {
+                            var level = _.find(hskLevels, function(level) {
+                                return level.words.indexOf($(word).text()) > -1;
+                            });
+
+                            switch (level && level.name) {
+                                case "HSK 1":
+                                    return $(word).css('color', '#E12E2E')[0];
+                                case "HSK 2":
+                                    return $(word).css('color', '#EB8B2B')[0];
+                                case "HSK 3":
+                                    return $(word).css('color', '#CFBE00')[0];
+                                case "HSK 4":
+                                    return $(word).css('color', '#1ca10d')[0];
+                                case "HSK 5":
+                                    return $(word).css('color', '#1D8FCC')[0];
+                                case "HSK 6":
+                                    return $(word).css('color', '#db44df')[0];
+                                default:
+                                    return word;
+                            }
+                        });
+                    });
+                    showExample();
+                });
+        }
 
         function addToBox(boxName, func) {
-        MEMRISE.garden.box_types[boxName].prototype.activate = (function() {
-            var cached_function = MEMRISE.garden.box_types[boxName].prototype.activate;
-            return function() {
-                var result = cached_function.apply(this, arguments);
-                func();
-                return result;
-            };
-        }());
+            MEMRISE.garden.box_types[boxName].prototype.activate = (function() {
+                var cached_function = MEMRISE.garden.box_types[boxName].prototype.activate;
+                return function() {
+                    var result = cached_function.apply(this, arguments);
+                    func();
+                    return result;
+                };
+            }());
         }
 
         function getUrl(wordURI, pageNo) {
@@ -85,11 +144,13 @@
         function loadDOM() {
             console.log("loading example sentence DOM");
             $('.columns').append(html);
+            setKeyboardEvents();
             setClickEvents();
         }
 
         function onDataLoaded(data) {
             data.exampleList = _.shuffle(data.exampleList);
+            addHskColours(data.exampleList);
             if (!cachedData) {
                 cachedData = data;
             } else if (data.exampleList) {
@@ -99,7 +160,7 @@
 
         function renderExample() {
             var example = cachedData.exampleList[exampleIndex];
-            $('#example-sentence').html(example.example);
+            $('#example-sentence').html(example.exampleAutolink);
             $('#pinyin').html(example.pinyin);
             $('#translation').html(example.translation);
 
@@ -107,10 +168,16 @@
             $('#next-example').toggle(exampleIndex + 1 < cachedData.total);
         }
 
+        function resetLocalVars() {
+            cachedData = undefined;
+            exampleIndex = 0;
+            pageNo = 0;
+        }
+
         function setClickEvents() {
             $('#example-detail-toggle').click(function() {
                 $('#example-detail-toggle')
-                .text($('#example-detail').is(':hidden') ? '-' : '+');
+                    .text($('#example-detail').is(':hidden') ? '-' : '+');
                 $('#example-detail').toggle();
             });
             $('#next-example').click(function() {
@@ -120,6 +187,44 @@
             $('#previous-example').click(function() {
                 exampleIndex--;
                 showExample();
+            });
+        }
+
+        function setKeyboardEvents() {
+            $(document).keydown(function(e) {
+                switch (e.which) {
+                    case 107: // +
+                    case 187: // =
+                        shiftExampleFontSize(+1);
+                        break;
+                    case 109: // - (subtract)
+                    case 189: // - (dash)
+                        shiftExampleFontSize(-1);
+                        break;
+                    case 188: // comma
+                        if ($('#previous-example').is(':visible')) {
+                            $('#previous-example').click();
+                        }
+                        break;
+                    case 190: // full stop
+                        if ($('#next-example').is(':visible')) {
+                            $('#next-example').click();
+                        }
+                        break;
+                    case 45: //insert
+                        $('#example-detail-toggle').click();
+                        break;
+                    default:
+                        return;
+                }
+                e.preventDefault();
+            });
+        }
+
+        function shiftExampleFontSize(shiftAmount) {
+            fontSizeOffset += (shiftAmount || 0);
+            $('#example-detail, #example-sentence').css('font-size', function() {
+                return parseInt($(this).css('font-size')) + shiftAmount + 'px';
             });
         }
 
@@ -149,12 +254,6 @@
             } else {
                 updateDOM();
             }
-        }
-
-        function resetLocalVars() {
-            cachedData = undefined;
-            exampleIndex = 0;
-            pageNo = 0;
         }
     }
 }());
