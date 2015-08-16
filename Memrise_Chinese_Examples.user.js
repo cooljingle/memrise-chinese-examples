@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          http://www.memrise.com/course/*/garden/*
 // @match          http://www.memrise.com/garden/review/*
-// @version        0.1.5
+// @version        0.1.6
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -33,7 +33,7 @@
     function enableExamples() {
         var exampleIndex,
             cachedData,
-            fontSizeOffset = 7, //change this number to alter the default font size of examples (measured in pixels from default); 
+            fontSizeScaleFactor = 1.3, //change this number to change the scale factor to which the default font size is to be altered 
             word,
             pageNo,
             pageSize = 20,
@@ -47,12 +47,12 @@
                 "   </div>",
                 "   <div class='row-value'>",
                 "       <div class='primary-value'>",
-                "           <span id='example-sentence' >",
+                "           <span id='example-sentence' style='font-size: " + 100 * fontSizeScaleFactor + "%'>",
                 "           </span>",
                 "           <a id='example-detail-toggle' style='cursor: pointer;color: #AAAAAA;'>+",
                 "           </a>",
                 "       </div>",
-                "       <div id='example-detail' style='font-size: .7em;display:none'>",
+                "       <div id='example-detail' style='font-size:  " + 70 * fontSizeScaleFactor + "%;display:none'>",
                 "           <div id='pinyin'>",
                 "           </div>",
                 "           <div id='translation'>",
@@ -71,6 +71,8 @@
         addToBox("CopyTypingBox", function() {
             showExample(true);
         });
+
+        setKeyboardEvents();
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -143,7 +145,6 @@
         function loadDOM() {
             console.log("loading example sentence DOM");
             $('.columns').append(html);
-            setKeyboardEvents();
             setClickEvents();
         }
 
@@ -173,6 +174,13 @@
             pageNo = 0;
         }
 
+        function scaleExampleFontSize(scaleFactor) {
+            $('#example-detail, #example-sentence').css('font-size', function() {
+                debugger;
+                return (parseFloat($(this).css('font-size')) * scaleFactor) + 'px';
+            });
+        }
+
         function setClickEvents() {
             $('#example-detail-toggle').click(function() {
                 $('#example-detail-toggle')
@@ -191,39 +199,34 @@
 
         function setKeyboardEvents() {
             $(document).keydown(function(e) {
-                switch (e.which) {
-                    case 107: // +
-                    case 187: // =
-                        shiftExampleFontSize(+1);
-                        break;
-                    case 109: // - (subtract)
-                    case 189: // - (dash)
-                        shiftExampleFontSize(-1);
-                        break;
-                    case 188: // comma
-                        if ($('#previous-example').is(':visible')) {
-                            $('#previous-example').click();
-                        }
-                        break;
-                    case 190: // full stop
-                        if ($('#next-example').is(':visible')) {
-                            $('#next-example').click();
-                        }
-                        break;
-                    case 45: //insert
-                        $('#example-detail-toggle').click();
-                        break;
-                    default:
-                        return;
+                if ($('#example-sentence').length > 0) {
+                    switch (e.which) {
+                        case 107: // +
+                        case 187: // =
+                            scaleExampleFontSize(1.1);
+                            break;
+                        case 109: // - (subtract)
+                        case 189: // - (dash)
+                            scaleExampleFontSize(0.9);
+                            break;
+                        case 188: // comma
+                            if ($('#previous-example').is(':visible')) {
+                                $('#previous-example').click();
+                            }
+                            break;
+                        case 190: // full stop
+                            if ($('#next-example').is(':visible')) {
+                                $('#next-example').click();
+                            }
+                            break;
+                        case 45: //insert
+                            $('#example-detail-toggle').click();
+                            break;
+                        default:
+                            return;
+                    }
+                    e.preventDefault();
                 }
-                e.preventDefault();
-            });
-        }
-
-        function shiftExampleFontSize(shiftAmount) {
-            fontSizeOffset += (shiftAmount || 0);
-            $('#example-detail, #example-sentence').css('font-size', function() {
-                return parseInt($(this).css('font-size')) + shiftAmount + 'px';
             });
         }
 
@@ -248,9 +251,6 @@
                     if (data.total !== 0) {
                         onDataLoaded(data);
                         updateDOM();
-                        if (pageNo === 1) {
-                            shiftExampleFontSize(fontSizeOffset);
-                        }
                     }
                 }, "jsonp");
             } else {
