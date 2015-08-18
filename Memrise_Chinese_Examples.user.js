@@ -62,8 +62,8 @@
                 "</div>"
             ].join("\n"));
 
-        addToBox("PresentationBox", function() {
-            word = MEMRISE.garden.boxes.current().thing.columns[1].val;
+        addToBox("PresentationBox", function(context) {
+            word = context.thing.columns[1].val;
             resetLocalVars();
             showExample(true);
         });
@@ -131,7 +131,7 @@
                 var cached_function = MEMRISE.garden.box_types[boxName].prototype.activate;
                 return function() {
                     var result = cached_function.apply(this, arguments);
-                    func();
+                    func(this);
                     return result;
                 };
             }());
@@ -176,7 +176,6 @@
 
         function scaleExampleFontSize(scaleFactor) {
             $('#example-detail, #example-sentence').css('font-size', function() {
-                debugger;
                 return (parseFloat($(this).css('font-size')) * scaleFactor) + 'px';
             });
         }
