@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          http://www.memrise.com/course/*/garden/*
 // @match          http://www.memrise.com/garden/review/*
-// @version        0.1.8
+// @version        0.1.9
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @resource       colourpicker_css https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.7.1/spectrum.min.css
@@ -200,29 +200,29 @@
 				"                    <table id='key-bindings' class='table table-condensed'>",
 				"                        <tbody>",
 				"                            <tr id='next-example-key'>",
-				"                                <th>",
+                "                                <th style='width:80%'>",
 				"                                    Next example",
 				"                                </th>",
-				"                                <td class='value'>",
+				"                                <td class='value' style='width:10%'>",
 				"                                    <kbd></kbd>",
 				"                                </td>",
-				"                                <td class='set-link'>",
+				"                                <td class='set-link' style='width:10%'>",
 				"                                    <a>Set</a>",
 				"                                </td>",
 				"                            </tr>",
 				"                            <tr id='previous-example-key'>",
-				"                                <th>",
+				"                                <th style='width:80%'>",
 				"                                    Previous example",
 				"                                </th>",
-				"                                <td class='value'>",
+				"                                <td class='value' style='width:10%'>",
 				"                                    <kbd></kbd>",
 				"                                </td>",
-				"                                <td class='set-link'>",
+				"                                <td class='set-link' style='width:10%'>",
 				"                                    <a>Set</a>",
 				"                                </td>",
 				"                            </tr>",
 				"                            <tr id='example-detail-toggle-key'>",
-				"                                <th>",
+				"                                <th style='width:80%'>",
 				"                                    Toggle example details",
 				"                                </th>",
 				"                                <td class='value'>",
@@ -233,35 +233,35 @@
 				"                                </td>",
 				"                            </tr>",
 				"                            <tr id='increase-font-size-key'>",
-				"                                <th>",
+				"                                <th style='width:80%'>",
 				"                                    Increase font size",
 				"                                </th>",
-				"                                <td class='value'>",
+				"                                <td class='value' style='width:10%'>",
 				"                                    <kbd></kbd>",
 				"                                </td>",
-				"                                <td class='set-link'>",
+				"                                <td class='set-link' style='width:10%'>",
 				"                                    <a>Set</a>",
 				"                                </td>",
 				"                            </tr>",
 				"                            <tr id='decrease-font-size-key'>",
-				"                                <th>",
+				"                                <th style='width:80%'>",
 				"                                    Decrease font size",
 				"                                </th>",
-				"                                <td class='value'>",
+				"                                <td class='value' style='width:10%'>",
 				"                                    <kbd></kbd>",
 				"                                </td>",
-				"                                <td class='set-link'>",
+				"                                <td class='set-link' style='width:10%'>",
 				"                                    <a>Set</a>",
 				"                                </td>",
 				"                            </tr>",
 				"                            <tr id='example-audio-key'>",
-				"                                <th>",
+				"                                <th style='width:80%'>",
 				"                                    Play audio",
 				"                                </th>",
-				"                                <td class='value'>",
+				"                                <td class='value' style='width:10%'>",
 				"                                    <kbd></kbd>",
 				"                                </td>",
-				"                                <td class='set-link'>",
+				"                                <td class='set-link' style='width:10%'>",
 				"                                    <a>Set</a>",
 				"                                </td>",
 				"                            </tr>",
@@ -283,15 +283,14 @@
 			word = context.thing.columns[1].val;
 			resetLocalVars();
 			showExample(true);
-			loadModal();
 		});
 
 		addToBox("CopyTypingBox", function() {
 			showExample(true);
-			loadModal();
 		});
         
 		setKeyboardEvents();
+        loadModal();
 
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -478,7 +477,7 @@
 		}
 
 		function setKeyboardEvents() {
-			$(document).keypress("example-keypress", function(e) {
+			$(document).on("keypress.example", function(e) {
 				if ($('#example-sentence').length > 0) {
 					var key = _.findKey(localStorageObject.keyBindings, function(value) {
 							return value === e.which;
@@ -519,12 +518,19 @@
 		}
 
 		function setModalEvents(settingsObject) {
-			//enable focus events on modal
+            //modal show/hide
 			$('#example-settings-modal').on('shown.bs.modal', function() {
-				$(document).off('focusin.modal');
+				$(document).off('focusin.modal'); //enable focus events on modal
+                $(document).off("keypress.example"); //disable keyboard shortcuts
+			});
+            
+			$('#example-settings-modal').on('hide.bs.modal', function() {
+				settingsObject = jQuery.extend(true, {}, localStorageObject);
+				setModalFields(settingsObject);
+                setKeyboardEvents();
 			});
 
-			//Colours
+			//coours
 			_.each($('#picker input'), function(input) {
 				var id = $(input).attr('id');
 				$(input).change(function() {
@@ -537,7 +543,7 @@
 				});
 			});
 
-			//Font size
+			//font size
 			$('#font-range')[0].oninput = function() {
 				var scaleFactor = $(this).val();
 				settingsObject.fontSizeScaleFactor = scaleFactor;
@@ -545,7 +551,7 @@
 				setModalFontSize(scaleFactor);
 			};
 
-			//Audio Speed
+			//audio Speed
 			$('#speed-range')[0].oninput = function() {
 				var speed = parseInt($(this).val(), 10);
                 switch(speed){
@@ -580,15 +586,16 @@
 				$('#underline-label').text(settingsObject.underlineWord ? "Underlined" : "Not underlined");
 			});
 
-			//Example difficulties
+			//example difficulties
 			$('.radio input[name=difficulty-options]').change(function() {
 				if ($(this).is(':checked')) {
 					settingsObject.difficulty = $(this).val();
 				}
 			});
 
-			//Key bindings
+			//key bindings
 			$('.set-link').click(function(setEvent) {
+                $(document).off("keypress.example");
 				var element = $(this).parent().find('.value');
 				var initialValue = element.text();
 				element.html('<input type="text" style="width:35px;height:20px;margin:0px" maxlength="1">');
@@ -606,8 +613,10 @@
 
 				function onInput(e) {
 					if (inputPending) {
+                        var id = element.parent().attr('id');
 						element.html('<kbd></kbd>');
-						var char = (e.type === "keypress" && !_.contains(_.values(settingsObject.keyBindings).concat(13), e.which)) ? String.fromCharCode(e.which) : initialValue;
+                        var invalidChars = _.where(settingsObject.keyBindings, function(val, key){return key.toString() !== id}).concat(13);
+						var char = (e.type === "keypress" && !_.contains(invalidChars, e.which)) ? String.fromCharCode(e.which) : initialValue;
 						element.find('kbd').text(char);
 						e.stopPropagation();
 						inputPending = false;
@@ -617,7 +626,7 @@
 				}
 			});
 
-			//Button click events
+			//button click events
 			$('#save-settings-button').click(function() {
 				var shouldReloadExamples = settingsObject.difficulty !== localStorageObject.difficulty;
 				localStorage.setItem(localStorageIdentifier, JSON.stringify(settingsObject));
@@ -638,14 +647,10 @@
 				settingsObject = jQuery.extend(true, {}, defaultSettings);
 				setModalFields(settingsObject);
 			});
-			$('#example-settings-modal').on('hide.bs.modal', function() {
-				settingsObject = jQuery.extend(true, {}, localStorageObject);
-				setModalFields(settingsObject);
-			});
 		}
 
 		function setModalFields(settingsObject) {
-			//Colours
+			//colours
 			_.each($('#picker input'), function(input) {
 				var id = $(input).attr('id');
 				$(input).spectrum({
@@ -654,19 +659,19 @@
 				$(input).change();
 			});
 
-			//Font size
+			//font size
 			$('#font-range').prop('value', settingsObject.fontSizeScaleFactor)[0].oninput();
 
-			//Audio speed
+			//audio speed
 			$('#speed-range').prop('value', settingsObject.audioSpeed)[0].oninput();
 
-			//Underline
+			//underline
 			$('#underline').prop('checked', settingsObject.underlineWord).change();
 
-			//Example difficulties
+			//example difficulties
 			$('.radio input[name=difficulty-options][value=' + settingsObject.difficulty + ']').prop('checked', true);
 
-			//Key bindings
+			//key bindings
 			_.each($('table#key-bindings tr'), function(tr) {
 				var id = $(tr).attr('id');
 				var char = String.fromCharCode(settingsObject.keyBindings[id]);
