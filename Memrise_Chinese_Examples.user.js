@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          http://www.memrise.com/course/*/garden/*
 // @match          http://www.memrise.com/garden/review/*
-// @version        0.1.10
+// @version        0.1.11
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -301,7 +301,6 @@
 
             $.get("http://crossorigin.me/" + "http://hskhsk.pythonanywhere.com/hanzi?ignoredefaults=true&analysehskwords=true&format=oneperline&hanzi=" + payload)
                 .complete(function(data) {
-                    console.log("got colours");
                     hskHtml = $(data.responseText).filter('*.box');
                     hskLevels = [];
 
@@ -387,7 +386,6 @@
         }
 
         function onDataLoaded(data) {
-            console.log("ondataloaded");
             data.exampleList = _.shuffle(data.exampleList);
             addHskColours(data.exampleList);
             if (localStorageObject.underlineWord) {
@@ -471,41 +469,43 @@
 
         function setKeyboardEvents() {
             $(document).on("keypress.example", function(e) {
-                if ($('#example-sentence').length > 0) {
-                    var key = _.findKey(localStorageObject.keyBindings, function(value) {
-                            return value === e.which;
-                        }),
-                        methods = {
-                            "next-example-key": function() {
-                                if ($('#next-example').is(':visible')) {
-                                    $('#next-example').click();
-                                }
-                            },
-                            "previous-example-key": function() {
-                                if ($('#previous-example').is(':visible')) {
-                                    $('#previous-example').click();
-                                }
-                            },
-                            "example-detail-toggle-key": function() {
-                                $('#example-detail-toggle').click();
-                            },
-                            "increase-font-size-key": function() {
-                                sessionFontSizeScaleFactor += 0.1;
-                                setExampleFontSize(sessionFontSizeScaleFactor);
-                            },
-                            "decrease-font-size-key": function() {
-                                sessionFontSizeScaleFactor -= 0.1;
-                                setExampleFontSize(sessionFontSizeScaleFactor);
-                            },
-                            "example-audio-key": function() {
-                                $('#example-audio').click();
-                            },
-                        };
-
-                    if (key) {
-                        methods[key]();
-                    }
-                    e.preventDefault();
+                if (!$(e.target).is("input")) {
+	                if ($('#example-sentence').length > 0) {
+	                    var key = _.findKey(localStorageObject.keyBindings, function(value) {
+	                            return value === e.which;
+	                        }),
+	                        methods = {
+	                            "next-example-key": function() {
+	                                if ($('#next-example').is(':visible')) {
+	                                    $('#next-example').click();
+	                                }
+	                            },
+	                            "previous-example-key": function() {
+	                                if ($('#previous-example').is(':visible')) {
+	                                    $('#previous-example').click();
+	                                }
+	                            },
+	                            "example-detail-toggle-key": function() {
+	                                $('#example-detail-toggle').click();
+	                            },
+	                            "increase-font-size-key": function() {
+	                                sessionFontSizeScaleFactor += 0.1;
+	                                setExampleFontSize(sessionFontSizeScaleFactor);
+	                            },
+	                            "decrease-font-size-key": function() {
+	                                sessionFontSizeScaleFactor -= 0.1;
+	                                setExampleFontSize(sessionFontSizeScaleFactor);
+	                            },
+	                            "example-audio-key": function() {
+	                                $('#example-audio').click();
+	                            },
+	                        };
+	
+	                    if (key) {
+	                        methods[key]();
+	                    }
+	                    e.preventDefault();
+	                }
                 }
             });
         }
