@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          http://www.memrise.com/course/*/garden/*
 // @match          http://www.memrise.com/garden/review/*
-// @version        0.1.11
+// @version        0.1.12
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -469,7 +469,7 @@
 
         function setKeyboardEvents() {
             $(document).on("keypress.example", function(e) {
-                if (!$(e.target).is("input")) {
+                if (!$(e.target).is("input, textarea")) {
 	                if ($('#example-sentence').length > 0) {
 	                    var key = _.findKey(localStorageObject.keyBindings, function(value) {
 	                            return value === e.which;
