@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          http://www.memrise.com/course/*/garden/*
 // @match          http://www.memrise.com/garden/review/*
-// @version        0.1.12
+// @version        1.0.0
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -278,7 +278,11 @@
             ].join("\n").replace(/[\t\r\n]/g, ""));
 
         addToBox("PresentationBox", function(context) {
-            word = context.thing.columns[1].val;
+            var columns = context.thing.columns,
+                columnIndex = _.findKey(columns, function(column) {
+                    return column.val.match(/^[\u2E80-\u2EFF\u3000-\u303F\u31C0-\u31EF\u3300-\u33FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\uFE30-\uFE4F]+$/); //unicode ranges for Chinese
+                });
+            word = columns[columnIndex].val;
             resetLocalVars();
             showExample(true);
         });
