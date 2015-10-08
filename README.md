@@ -9,11 +9,12 @@ Userscript which provides example Chinese sentences. When reviewing new/forgotto
 
    ![colour key](http://static.memrise.com/uploads/discuss/6097291000150817004824.gif)
 
+- audio generation of the example sentence
 - keyboard shortcuts:
     * change font size - increase: **+**; decrease - **-**
     * toggle example details (pinyin, translation) - **/**
     * navigate examples - **,** and **.**
-- audio generation of the example sentence
+    * play audio for sentence - **p**
 - configuration of many aspects of the above options, the changes of which are persisted via localstorage.
 
 ### Installation
