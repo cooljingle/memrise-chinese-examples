@@ -5,7 +5,7 @@ Userscript which provides example Chinese sentences. When reviewing new/forgotto
 - example Mandarin Chinese sentences from LINE dictionary
 - toggle to show pinyin and english translation
 - navigation buttons to cycle through examples
-- word colouring by HSK level provided by http://hskhsk.pythonanywhere.com/hanzi
+- word colouring by HSK level
 
    ![colour key](http://static.memrise.com/uploads/discuss/6097291000150817004824.gif)
 
