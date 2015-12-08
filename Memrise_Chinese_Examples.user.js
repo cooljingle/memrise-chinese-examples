@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          http://www.memrise.com/course/*/garden/*
 // @match          http://www.memrise.com/garden/review/*
-// @version        1.0.3
+// @version        1.0.4
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -382,10 +382,19 @@
             var columns = context.thing.columns,
                 columnIndex = _.findKey(columns, function(column) {
                     return isChinese(column.val);
+                }),
+                pinyinColumnIndex = _.findKey(columns, function(column) {
+                    return isPinyin(column.val);
                 });
             word = columns[columnIndex].val;
             resetLocalVars();
             showExample(true);
+            if(pinyinColumnIndex) {
+                var elem = $('.garden-box .column').eq(pinyinColumnIndex - 1).find('.primary-value')[0];
+                var exampleFormat = [{pinyin: columns[pinyinColumnIndex].val, exampleAutolink: '<span>' + word + '</span>'}];
+                colourExamplesByTone(exampleFormat);
+                $('.garden-box .column').eq(columnIndex - 1).find('.primary-value').html(exampleFormat[0].exampleAutolink);
+            }
         });
 
         addToBox("CopyTypingBox", function() {
@@ -394,535 +403,551 @@
         
         setKeyboardEvents();
         loadModal();
+		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		function addToBox(boxName, func) {
+		    MEMRISE.garden.box_types[boxName].prototype.activate = (function() {
+		        var cached_function = MEMRISE.garden.box_types[boxName].prototype.activate;
+		        return function() {
+		            var result = cached_function.apply(this, arguments);
+		            func(this);
+		            return result;
+		        };
+		    }());
+		}
 
-        function addToBox(boxName, func) {
-            MEMRISE.garden.box_types[boxName].prototype.activate = (function() {
-                var cached_function = MEMRISE.garden.box_types[boxName].prototype.activate;
-                return function() {
-                    var result = cached_function.apply(this, arguments);
-                    func(this);
-                    return result;
-                };
-            }());
-        }
+		function colourExamples(examples) {
+		    switch (localStorageObject.colouring || "hsk") {
+		        case "hsk":
+		            return colourExamplesByHsk(examples);
+		        case "tone":
+		            return colourExamplesByTone(examples);
+		        case "none":
+		            return colourExamplesByNothing(examples);
+		    }
+		}
 
-        function colourExamples(examples) {
-            switch(localStorageObject.colouring || "hsk"){
-                case "hsk":
-                    return colourExamplesByHsk(examples);
-                case "tone":
-                    return colourExamplesByTone(examples);
-                case "none":
-                    return colourExamplesByNothing(examples);
-            }
-        }
-        
-        function colourExamplesByHsk(examples) {
-            _.each(examples, function(example) {
-                example.exampleAutolink = _.map($.parseHTML(example.exampleAutolink) || example.exampleAutolink, function(elem) {
-                    $(elem).find('[style]').addBack('[style]').removeAttr('style');
-                    
-                    var level = _.find(hskLevels, function(level) {
-                        return level.words.indexOf($(elem).text()) > -1;
-                    });
+		function colourExamplesByHsk(examples) {
+		    _.each(examples, function(example) {
+		        example.exampleAutolink = _.map($.parseHTML(example.exampleAutolink) || example.exampleAutolink, function(elem) {
+		            $(elem).find('[style]').addBack('[style]').removeAttr('style');
 
-                    switch (level && level.name) {
-                        case "HSK 1":
-                            return $(elem).css('color', localStorageObject.colours["hsk-1"])[0];
-                        case "HSK 2":
-                            return $(elem).css('color', localStorageObject.colours["hsk-2"])[0];
-                        case "HSK 3":
-                            return $(elem).css('color', localStorageObject.colours["hsk-3"])[0];
-                        case "HSK 4":
-                            return $(elem).css('color', localStorageObject.colours["hsk-4"])[0];
-                        case "HSK 5":
-                            return $(elem).css('color', localStorageObject.colours["hsk-5"])[0];
-                        case "HSK 6":
-                            return $(elem).css('color', localStorageObject.colours["hsk-6"])[0];
-                        default:
-                            return $(elem).css('color', localStorageObject.colours["non-hsk"])[0];
+		            var level = _.find(hskLevels, function(level) {
+		                return level.words.indexOf($(elem).text()) > -1;
+		            });
+
+		            switch (level && level.name) {
+		                case "HSK 1":
+		                    return $(elem).css('color', localStorageObject.colours["hsk-1"])[0];
+		                case "HSK 2":
+		                    return $(elem).css('color', localStorageObject.colours["hsk-2"])[0];
+		                case "HSK 3":
+		                    return $(elem).css('color', localStorageObject.colours["hsk-3"])[0];
+		                case "HSK 4":
+		                    return $(elem).css('color', localStorageObject.colours["hsk-4"])[0];
+		                case "HSK 5":
+		                    return $(elem).css('color', localStorageObject.colours["hsk-5"])[0];
+		                case "HSK 6":
+		                    return $(elem).css('color', localStorageObject.colours["hsk-6"])[0];
+		                default:
+		                    return $(elem).css('color', localStorageObject.colours["non-hsk"])[0];
+		            }
+		        });
+		    });
+		}
+
+		function colourExamplesByNothing(examples) {
+		    _.each(examples, function(example) {
+		        example.exampleAutolink = _.map($.parseHTML(example.exampleAutolink) || example.exampleAutolink, function(elem) {
+		            $(elem).find('[style]').addBack('[style]').removeAttr('style');
+		            return $(elem).css('color', "black")[0];
+		        });
+		    });
+		}
+
+		function colourExamplesByTone(examples) {
+		    _.each(examples, function(example) {
+		        var previousCharIsVowel = false,
+		            tones = getTones($($.parseHTML(example.pinyin)).text()),
+		            toneIndex = 0;
+
+		        function colourTone(elem) {
+		            var text = $(elem).text();
+		            if (isChinese(text)) {
+		                previousCharIsVowel = false;
+		                switch (tones[toneIndex++]) {
+		                    case 1:
+		                        return $(elem).css('color', localStorageObject.colours["tone-1"] || defaultSettings.colours["tone-1"]).prop('outerHTML');
+		                    case 2:
+		                        return $(elem).css('color', localStorageObject.colours["tone-2"] || defaultSettings.colours["tone-2"]).prop('outerHTML');
+		                    case 3:
+		                        return $(elem).css('color', localStorageObject.colours["tone-3"] || defaultSettings.colours["tone-3"]).prop('outerHTML');
+		                    case 4:
+		                        return $(elem).css('color', localStorageObject.colours["tone-4"] || defaultSettings.colours["tone-4"]).prop('outerHTML');
+		                    case 5:
+		                        return $(elem).css('color', localStorageObject.colours["tone-5"] || defaultSettings.colours["tone-5"]).prop('outerHTML');
+		                }
+		            } else {
+		                //increment the tone index if char is a vowel and the prev char was not
+		                if (text.toLowerCase().match(/aeiou/)) {
+		                    if (!previousCharIsVowel) {
+		                        toneIndex++;
+		                    }
+		                    previousCharIsVowel = true;
+		                } else {
+		                    previousCharIsVowel = false;
+		                }
+		                return $(elem).css('color', localStorageObject.colours["tone-5"] || defaultSettings.colours["tone-5"]).prop('outerHTML');
+		            } 
+		        }
+
+		        example.exampleAutolink = _.map($.parseHTML(example.exampleAutolink) || example.exampleAutolink, function(elem) {
+		            $(elem).find('[style]').addBack('[style]').removeAttr('style');
+                    if(!$(elem).get(0).tagName){
+                        elem = $.parseHTML("<span>" + $(elem).text() + "</span>");
                     }
-                });
-            });
-        }
-        
-        function colourExamplesByNothing(examples) {
-            _.each(examples, function(example) {
-                example.exampleAutolink = _.map($.parseHTML(example.exampleAutolink) || example.exampleAutolink, function(elem) {
-                    $(elem).find('[style]').addBack('[style]').removeAttr('style');
-                    return $(elem).css('color', "black")[0];
-                });
-            });
-        }
-        
-        function colourExamplesByTone(examples) {
-            _.each(examples, function(example) {
-                var previousCharIsVowel = false,
-                    tones = getTones($($.parseHTML(example.pinyin)).text()),
-                    toneIndex = 0;
-                
-                function colourTone(elem) {
-                    var text = $(elem).text();
-                    if(!isChinese(text)){
-                        //increment the tone index if char is a vowel and the prev char was not
-                        if(text.toLowerCase().match(/aeiou/)) {
-                            if(!previousCharIsVowel) {
-                                toneIndex++;
-                            }
-                            previousCharIsVowel = true;
-                        } else {
-                            previousCharIsVowel = false;
-                        }
-                        return $(elem).css('color', localStorageObject.colours["tone-5"] || defaultSettings.colours["tone-5"]).prop('outerHTML');
-                    } else {
-                        previousCharIsVowel = false;
-                        switch (tones[toneIndex++]) {
-                            case 1:
-                                return $(elem).css('color', localStorageObject.colours["tone-1"] || defaultSettings.colours["tone-1"]).prop('outerHTML');
-                            case 2:
-                                return $(elem).css('color', localStorageObject.colours["tone-2"] || defaultSettings.colours["tone-2"]).prop('outerHTML');
-                            case 3:
-                                return $(elem).css('color', localStorageObject.colours["tone-3"] || defaultSettings.colours["tone-3"]).prop('outerHTML');
-                            case 4:
-                                return $(elem).css('color', localStorageObject.colours["tone-4"] || defaultSettings.colours["tone-4"]).prop('outerHTML');
-                            case 5:
-                                return $(elem).css('color', localStorageObject.colours["tone-5"] || defaultSettings.colours["tone-5"]).prop('outerHTML');
-                        }
-                    }
-                }
-                
-                example.exampleAutolink = _.map($.parseHTML(example.exampleAutolink) || example.exampleAutolink, function(elem) {
-                    $(elem).find('[style]').addBack('[style]').removeAttr('style');
-                    return $(elem).html(function(i, html) {
-                        //wrap non-angle bracket stuff in colour styled spans
-                        return html && html.replace(/<[^>]+>|([^<]+?)/g, function(match, capture){
-                            if(capture) {
-                                return colourTone($.parseHTML("<span>" + capture + "</span>"));
-                            } else {
-                                return match;
-                            }
-                        }) || $(this).text();
-                    });
-                });
-            });
-        }
-        
-        function colourUnderlines(examples) {
-            _.each(examples, function(example) {
-                example.exampleAutolink = _.map($.parseHTML(example.exampleAutolink) || example.exampleAutolink, function(elem) {
-                    $(elem).find('u').css('color', function() {
-                        return $(this).find('[style]').css('color');
-                    });
-                    return elem;
-                });
-            });
-        }
+		            return $(elem).html(function(i, html) {
+                        html = html || $(this).text();
+		                //wrap non-angle bracket stuff in colour styled spans
+		                return html.replace(/<[^>]+>|([^<]+?)/g, function(match, capture) {
+		                    if (capture) {
+		                        return colourTone($.parseHTML("<span>" + capture + "</span>"));
+		                    } else {
+		                        return match;
+		                    }
+		                });
+		            });
+		        });
+		    });
+		}
 
-        function getTones(example){
-            var tones = [],
-                vowels = 'āáǎàaēéěèeīíǐìiōóǒòoūúǔùuǖǘǚǜü',
-                regex = new RegExp("[" + vowels + "]+", "g"),
+		function colourUnderlines(examples) {
+		    _.each(examples, function(example) {
+		        example.exampleAutolink = _.map($.parseHTML(example.exampleAutolink) || example.exampleAutolink, function(elem) {
+		            $(elem).find('u').css('color', function() {
+		                return $(this).find('[style]').css('color');
+		            });
+		            return elem;
+		        });
+		    });
+		}
+
+		function getTones(example) {
+		    var tones = [],
+		        regex = new RegExp("[āáǎàaēéěèeīíǐìiōóǒòoūúǔùuǖǘǚǜü.']+[^āáǎàaēéěèeīíǐìiōóǒòoūúǔùuǖǘǚǜü.']{0,2}", "g"),  // {0,2} -> so we can then account for 儿话音
                 matches = example.toLowerCase().match(regex);
-            _.each(matches, function(m){
-                if(m.match(/[āēīōūǖ]/)){
-                    tones.push(1);
-                } else if(m.match(/[áéíóúǘ]/)){
-                    tones.push(2);
-                } else if(m.match(/[ǎěǐǒǔǚ]/)){
-                    tones.push(3);
-                } else if(m.match(/[àèìòùǜ]/)){
-                    tones.push(4);
-                } else {
+            
+		    _.each(matches, function(m) {
+		        if (m.match(/[āēīōūǖ]/)) {
+		            tones.push(1);
+		        } else if (m.match(/[áéíóúǘ]/)) {
+		            tones.push(2);
+		        } else if (m.match(/[ǎěǐǒǔǚ]/)) {
+		            tones.push(3);
+		        } else if (m.match(/[àèìòùǜ]/)) {
+		            tones.push(4);
+		        } else {
+		            tones.push(5);1
+		        }
+                //bonus push for er and full stops
+                if(((m.endsWith("er") || (m.endsWith("r "))) && m.length > 2) || 
+                   (m.endsWith(".") && m.length > 1)) {
                     tones.push(5);
                 }
-            })
-            return tones;
-        }
+		    })
+		    return tones;
+		}
 
-        function getUrl(wordURI, pageNo) {
-            return "http://linedict.naver.com/cnen/example/search.dict?query=" +
-                wordURI + "&page=" + pageNo + "&page_size=" + pageSize + "&format=json" + difficulties[localStorageObject.difficulty];
-        }
+		function getUrl(wordURI, pageNo) {
+		    return "http://linedict.naver.com/cnen/example/search.dict?query=" +
+		        wordURI + "&page=" + pageNo + "&page_size=" + pageSize + "&format=json" + difficulties[localStorageObject.difficulty];
+		}
 
-        function initialiseFontSizes() {
-            setExampleFontSize(sessionFontSizeScaleFactor);
-            setModalFontSize(localStorageObject.fontSizeScaleFactor);
-        }
-        
-        function isChinese(input){
-            return input.match(/^[\u2E80-\u2EFF\u3000-\u303F\u31C0-\u31EF\u3300-\u33FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\uFE30-\uFE4F]+$/); //unicode ranges for Chinese
-        }
+		function initialiseFontSizes() {
+		    setExampleFontSize(sessionFontSizeScaleFactor);
+		    setModalFontSize(localStorageObject.fontSizeScaleFactor);
+		}
 
-        function loadModal() {
-            $("body").append(modalHtml);
-            var settingsObject = jQuery.extend(true, {}, localStorageObject);
-            setModalEvents(settingsObject);
-            setModalFields(settingsObject);
-        }
+		function isChinese(input) {
+		    return typeof(input) === "string" && input.match(/^[\u2E80-\u2EFF\u3000-\u303F\u31C0-\u31EF\u3300-\u33FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\uFE30-\uFE4F]+$/); //unicode ranges for Chinese
+		}
 
-        function loadDOM() {
-            console.log("loading example sentence DOM for word " + word);
-            exampleHtml.find('#example-sentence, #pinyin, #translation').html("");
-            $('.columns').append(exampleHtml);
-            shiftShowMoreLink();
-            setClickEvents();
-            if (firstTimeLoad) {
-                initialiseFontSizes();
-                firstTimeLoad = false;
-            }
-        }
+		function isPinyin(input) {
+		    return typeof(input) === "string" && input.toLowerCase().match(/[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/);
+		}
 
-        function onDataLoaded(data) {
-            data.exampleList = _.shuffle(data.exampleList);
-            colourExamples(data.exampleList);
-            if (localStorageObject.underlineWord) {
-                toggleUnderlines(data.exampleList);
-                colourUnderlines(data.exampleList);
-            }
-            if (!cachedData) {
-                cachedData = data;
-            } else if (data.exampleList) {
-                Array.prototype.push.apply(cachedData.exampleList, data.exampleList);
-            }
-        }
-        
-        function playAudio(word, speed) {
-            var audioElement = document.createElement('audio');
-            var audioLink = 'http://tts.cndic.naver.com/tts/mp3ttsV1.cgi?spk_id=250&text_fmt=0&pitch=100&volume=100&speed=' + 80 * speed + '&wrapper=0&enc=0&text=' +
-                encodeURIComponent(word);
-            audioElement.setAttribute('src', audioLink);
-            audioElement.play();
-            audioPlaying = true;
-            $(audioElement).on('ended', function() {
-                audioPlaying = false;
-            });
-        }
+		function loadModal() {
+		    $("body").append(modalHtml);
+		    var settingsObject = jQuery.extend(true, {}, localStorageObject);
+		    setModalEvents(settingsObject);
+		    setModalFields(settingsObject);
+		}
 
-        function renderExample() {
-            var example = cachedData.exampleList[exampleIndex] || "";
-            $('#example-sentence').html(example.exampleAutolink);
-            $('#pinyin').html(example.pinyin);
-            $('#translation').html(example.translation);
+		function loadDOM() {
+		    console.log("loading example sentence DOM for word " + word);
+		    exampleHtml.find('#example-sentence, #pinyin, #translation').html("");
+		    $('.columns').append(exampleHtml);
+		    shiftShowMoreLink();
+		    setClickEvents();
+		    if (firstTimeLoad) {
+		        initialiseFontSizes();
+		        firstTimeLoad = false;
+		    }
+		}
 
-            $('#previous-example').toggle(exampleIndex > 0);
-            $('#next-example').toggle(exampleIndex + 1 < cachedData.total);
-            $('#example-detail-toggle').toggle(!!example);
-            $('#example-audio').toggle(!!example);
-        }
+		function onDataLoaded(data) {
+		    data.exampleList = _.shuffle(data.exampleList);
+		    colourExamples(data.exampleList);
+		    if (localStorageObject.underlineWord) {
+		        toggleUnderlines(data.exampleList);
+		        colourUnderlines(data.exampleList);
+		    }
+		    if (!cachedData) {
+		        cachedData = data;
+		    } else if (data.exampleList) {
+		        Array.prototype.push.apply(cachedData.exampleList, data.exampleList);
+		    }
+		}
 
-        function resetLocalVars() {
-            cachedData = undefined;
-            exampleIndex = 0;
-            pageNo = 0;
-        }
+		function playAudio(word, speed) {
+		    var audioElement = document.createElement('audio');
+		    var audioLink = 'http://tts.cndic.naver.com/tts/mp3ttsV1.cgi?spk_id=250&text_fmt=0&pitch=100&volume=100&speed=' + 80 * speed + '&wrapper=0&enc=0&text=' +
+		        encodeURIComponent(word);
+		    audioElement.setAttribute('src', audioLink);
+		    audioElement.play();
+		    audioPlaying = true;
+		    $(audioElement).on('ended', function() {
+		        audioPlaying = false;
+		    });
+		}
 
-        function scaleElementFontSize(selector, scaleFactor) {
-            $(selector).css('font-size', function() {
-                var defaultSize = parseFloat($(this).parent().css('font-size'));
-                return (defaultSize * scaleFactor) + 'px';
-            }).css('line-height', function() {
-                var defaultSize = parseFloat($(this).parent().css('line-height'));
-                return (defaultSize * scaleFactor) + 'px';
-            });
-        }
+		function renderExample() {
+		    var example = cachedData.exampleList[exampleIndex] || "";
+		    $('#example-sentence').html(example.exampleAutolink);
+		    $('#pinyin').html(example.pinyin);
+		    $('#translation').html(example.translation);
 
-        function setClickEvents() {
-            $('#example-detail-toggle').click(function() {
-                $('#example-detail-toggle')
-                    .text($('#example-detail').is(':hidden') ? '-' : '+');
-                $('#example-detail').toggle();
-            });
-            $('#next-example').click(function() {
-                exampleIndex++;
-                showExample();
-            });
-            $('#previous-example').click(function() {
-                exampleIndex--;
-                showExample();
-            });
-            $('#example-audio').click(function() {
-                if (audioPlaying) {
-                    return;
-                } else {
-                    playAudio(cachedData.exampleList[exampleIndex].example, localStorageObject.audioSpeed);
-                }
-            });
-        }
+		    $('#previous-example').toggle(exampleIndex > 0);
+		    $('#next-example').toggle(exampleIndex + 1 < cachedData.total);
+		    $('#example-detail-toggle').toggle(!!example);
+		    $('#example-audio').toggle(!!example);
+		}
 
-        function setExampleFontSize(scaleFactor) {
-            scaleElementFontSize("#example-sentence", scaleFactor);
-            scaleElementFontSize("#example-detail", 0.7 * scaleFactor);
-            scaleElementFontSize("#example-detail-toggle", 0.7 * scaleFactor);
-        }
+		function resetLocalVars() {
+		    cachedData = undefined;
+		    exampleIndex = 0;
+		    pageNo = 0;
+		}
 
-        function setKeyboardEvents() {
-            $(document).on("keypress.example", function(e) {
-                if (!$(e.target).is("input, textarea")) {
-	                if ($('#example-sentence').length > 0) {
-	                    var key = _.findKey(localStorageObject.keyBindings, function(value) {
-	                            return value === e.which;
-	                        }),
-	                        methods = {
-	                            "next-example-key": function() {
-	                                if ($('#next-example').is(':visible')) {
-	                                    $('#next-example').click();
-	                                }
-	                            },
-	                            "previous-example-key": function() {
-	                                if ($('#previous-example').is(':visible')) {
-	                                    $('#previous-example').click();
-	                                }
-	                            },
-	                            "example-detail-toggle-key": function() {
-	                                $('#example-detail-toggle').click();
-	                            },
-	                            "increase-font-size-key": function() {
-	                                sessionFontSizeScaleFactor += 0.1;
-	                                setExampleFontSize(sessionFontSizeScaleFactor);
-	                            },
-	                            "decrease-font-size-key": function() {
-	                                sessionFontSizeScaleFactor -= 0.1;
-	                                setExampleFontSize(sessionFontSizeScaleFactor);
-	                            },
-	                            "example-audio-key": function() {
-	                                $('#example-audio').click();
-	                            },
-	                        };
-	
-	                    if (key) {
-	                        methods[key]();
-	                    }
-	                    e.preventDefault();
-	                }
-                }
-            });
-        }
+		function scaleElementFontSize(selector, scaleFactor) {
+		    $(selector).css('font-size', function() {
+		        var defaultSize = parseFloat($(this).parent().css('font-size'));
+		        return (defaultSize * scaleFactor) + 'px';
+		    }).css('line-height', function() {
+		        var defaultSize = parseFloat($(this).parent().css('line-height'));
+		        return (defaultSize * scaleFactor) + 'px';
+		    });
+		}
 
-        function setModalEvents(settingsObject) {
-            //modal show/hide
-            $('#example-settings-modal').on('shown.bs.modal', function() {
-                $(document).off('focusin.modal'); //enable focus events on modal
-                $(document).off("keypress.example"); //disable keyboard shortcuts
-            });
-            
-            $('#example-settings-modal').on('hide.bs.modal', function() {
-                settingsObject = jQuery.extend(true, {}, localStorageObject);
-                setModalFields(settingsObject);
-                setKeyboardEvents();
-            });
+		function setClickEvents() {
+		    $('#example-detail-toggle').click(function() {
+		        $('#example-detail-toggle')
+		            .text($('#example-detail').is(':hidden') ? '-' : '+');
+		        $('#example-detail').toggle();
+		    });
+		    $('#next-example').click(function() {
+		        exampleIndex++;
+		        showExample();
+		    });
+		    $('#previous-example').click(function() {
+		        exampleIndex--;
+		        showExample();
+		    });
+		    $('#example-audio').click(function() {
+		        if (audioPlaying) {
+		            return;
+		        } else {
+		            playAudio(cachedData.exampleList[exampleIndex].example, localStorageObject.audioSpeed);
+		        }
+		    });
+		}
 
-            //colours
-            $('.picker button').colorPicker({
-                renderCallback: function($elm, toggled) {
-                    if($elm.parents('.picker').length) {
-                        var id = $elm.attr('id'),
-                            newColour = $elm.css('background-color');
-                        settingsObject.colours[id] = newColour;
-                        $('.' + id).css('color', newColour);
-                    }
-                },
-                buildCallback: function($elm) {
-                    $('.cp-color-picker').css('z-index', 2000); //bring to front
-                },              
-            });      
-            
-            $('.radio input[name=colouring-options]').change(function() {
-                if ($(this).is(':checked')) {
-                    var choice = $(this).val();
-                    settingsObject.colouring = choice;
-                    $('#hsk-example, #tone-example, #none-example').each(function() {
-                        var parsedId = $(this).attr('id').replace('-example','');
-                        $(this).toggle(choice === parsedId);
-                    });
-                }
-            });
+		function setExampleFontSize(scaleFactor) {
+		    scaleElementFontSize("#example-sentence", scaleFactor);
+		    scaleElementFontSize("#example-detail", 0.7 * scaleFactor);
+		    scaleElementFontSize("#example-detail-toggle", 0.7 * scaleFactor);
+		}
 
-            //font size
-            $('#font-range')[0].oninput = function() {
-                var scaleFactor = $(this).val();
-                settingsObject.fontSizeScaleFactor = scaleFactor;
-                $('#font-range-label').text(scaleFactor + 'x');
-                setModalFontSize(scaleFactor);
-            };
+		function setKeyboardEvents() {
+		    $(document).on("keypress.example", function(e) {
+		        if (!$(e.target).is("input, textarea")) {
+		            if ($('#example-sentence').length > 0) {
+		                var key = _.findKey(localStorageObject.keyBindings, function(value) {
+		                        return value === e.which;
+		                    }),
+		                    methods = {
+		                        "next-example-key": function() {
+		                            if ($('#next-example').is(':visible')) {
+		                                $('#next-example').click();
+		                            }
+		                        },
+		                        "previous-example-key": function() {
+		                            if ($('#previous-example').is(':visible')) {
+		                                $('#previous-example').click();
+		                            }
+		                        },
+		                        "example-detail-toggle-key": function() {
+		                            $('#example-detail-toggle').click();
+		                        },
+		                        "increase-font-size-key": function() {
+		                            sessionFontSizeScaleFactor += 0.1;
+		                            setExampleFontSize(sessionFontSizeScaleFactor);
+		                        },
+		                        "decrease-font-size-key": function() {
+		                            sessionFontSizeScaleFactor -= 0.1;
+		                            setExampleFontSize(sessionFontSizeScaleFactor);
+		                        },
+		                        "example-audio-key": function() {
+		                            $('#example-audio').click();
+		                        },
+		                    };
 
-            //audio Speed
-            $('#speed-range')[0].oninput = function() {
-                var speed = parseInt($(this).val(), 10);
-                switch(speed){
-                    case 0:
-                        settingsObject.audioSpeed = 0.2;
-                        $('#speed-range-label').text("Slow");
-                        break;
-                    case 1:
-                        settingsObject.audioSpeed = 1;
-                        $('#speed-range-label').text("Normal");
-                        break;
-                    case 2:
-                        settingsObject.audioSpeed = 2.5;
-                        $('#speed-range-label').text("Fast");
-                        break;
-                }
-            };
-            
-            $('#settings-example-audio').click(function(){
-               playAudio($('#settings-example-sentence').text(), settingsObject.audioSpeed); 
-            });
-            
-            //Underline
-            $('#underline').change(function() {
-                var example = $('#settings-example-sentence'),
-                    exampleUnderlined = !!$('#settings-example-sentence u').length;
+		                if (key) {
+		                    methods[key]();
+		                }
+		                e.preventDefault();
+		            }
+		        }
+		    });
+		}
 
-                settingsObject.underlineWord = $(this).is(':checked');
-                if (settingsObject.underlineWord !== exampleUnderlined) {
-                    toggleUnderline(example);
-                }
-                $('#underline-label').text(settingsObject.underlineWord ? "Underlined" : "Not underlined");
-            });
+		function setModalEvents(settingsObject) {
+		    //modal show/hide
+		    $('#example-settings-modal').on('shown.bs.modal', function() {
+		        $(document).off('focusin.modal'); //enable focus events on modal
+		        $(document).off("keypress.example"); //disable keyboard shortcuts
+		    });
 
-            //example difficulties
-            $('.radio input[name=difficulty-options]').change(function() {
-                if ($(this).is(':checked')) {
-                    settingsObject.difficulty = $(this).val();
-                }
-            });
+		    $('#example-settings-modal').on('hide.bs.modal', function() {
+		        settingsObject = jQuery.extend(true, {}, localStorageObject);
+		        setModalFields(settingsObject);
+		        setKeyboardEvents();
+		    });
 
-            //key bindings
-            $('.set-link').click(function(setEvent) {
-                $(document).off("keypress.example");
-                var element = $(this).parent().find('.value');
-                var initialValue = element.text();
-                element.html('<input type="text" style="width:35px;height:20px;margin:0px" maxlength="1">');
-                element.find('input').focus();
+		    //colours
+		    $('.picker button').colorPicker({
+		        renderCallback: function($elm, toggled) {
+		            if ($elm.parents('.picker').length) {
+		                var id = $elm.attr('id'),
+		                    newColour = $elm.css('background-color');
+		                settingsObject.colours[id] = newColour;
+		                $('.' + id).css('color', newColour);
+		            }
+		        },
+		        buildCallback: function($elm) {
+		            $('.cp-color-picker').css('z-index', 2000); //bring to front
+		        },
+		    });
 
-                var inputPending = true;
-                setEvent.stopPropagation();
+		    $('.radio input[name=colouring-options]').change(function() {
+		        if ($(this).is(':checked')) {
+		            var choice = $(this).val();
+		            settingsObject.colouring = choice;
+		            $('#hsk-example, #tone-example, #none-example').each(function() {
+		                var parsedId = $(this).attr('id').replace('-example', '');
+		                $(this).toggle(choice === parsedId);
+		            });
+		        }
+		    });
 
-                $(document).click(function(event) {
-                    onInput(event);
-                });
-                $(document).keypress(function(event) {
-                    onInput(event);
-                });
+		    //font size
+		    $('#font-range')[0].oninput = function() {
+		        var scaleFactor = $(this).val();
+		        settingsObject.fontSizeScaleFactor = scaleFactor;
+		        $('#font-range-label').text(scaleFactor + 'x');
+		        setModalFontSize(scaleFactor);
+		    };
 
-                function onInput(e) {
-                    if (inputPending) {
-                        var id = element.parent().attr('id');
-                        element.html('<kbd></kbd>');
-                        var invalidChars = _.where(settingsObject.keyBindings, function(val, key){return key.toString() !== id}).concat(13);
-                        var char = (e.type === "keypress" && !_.contains(invalidChars, e.which)) ? String.fromCharCode(e.which) : initialValue;
-                        element.find('kbd').text(char);
-                        e.stopPropagation();
-                        inputPending = false;
-                        settingsObject.keyBindings[element.parent().attr('id')] = char.charCodeAt(0);
-                    }
-                    $(this).off(e);
-                }
-            });
+		    //audio Speed
+		    $('#speed-range')[0].oninput = function() {
+		        var speed = parseInt($(this).val(), 10);
+		        switch (speed) {
+		            case 0:
+		                settingsObject.audioSpeed = 0.2;
+		                $('#speed-range-label').text("Slow");
+		                break;
+		            case 1:
+		                settingsObject.audioSpeed = 1;
+		                $('#speed-range-label').text("Normal");
+		                break;
+		            case 2:
+		                settingsObject.audioSpeed = 2.5;
+		                $('#speed-range-label').text("Fast");
+		                break;
+		        }
+		    };
 
-            //button click events
-            $('#save-settings-button').click(function() {
-                var shouldReloadExamples = settingsObject.difficulty !== localStorageObject.difficulty;
-                var shouldToggleUnderline = settingsObject.underlineWord !== localStorageObject.underlineWord;
-                localStorage.setItem(localStorageIdentifier, JSON.stringify(settingsObject));
-                localStorageObject = jQuery.extend(true, {}, settingsObject);
-                if (shouldReloadExamples) {
-                    $('#example-html').remove();
-                    resetLocalVars();
-                    showExample(true);
-                } else {
-                    colourExamples(cachedData.exampleList);
-                    if(shouldToggleUnderline){
-                        toggleUnderlines(cachedData.exampleList);
-                    }
-                    colourUnderlines(cachedData.exampleList);
-                    showExample();
-                }
-                sessionFontSizeScaleFactor = parseFloat(localStorageObject.fontSizeScaleFactor);
-                setExampleFontSize(sessionFontSizeScaleFactor);
-            });
-            $('#reset-settings-button').click(function() {
-                settingsObject = jQuery.extend(true, {}, defaultSettings);
-                setModalFields(settingsObject);
-            });
-        }
+		    $('#settings-example-audio').click(function() {
+		        playAudio($('#settings-example-sentence').text(), settingsObject.audioSpeed);
+		    });
 
-        function setModalFields(settingsObject) {            
-            //colours
-            _.each($('.picker button'), function(elem){
-                var id = $(elem).attr('id');
-                $(elem).css('background-color', settingsObject.colours[id] || defaultSettings.colours[id]);
-                $('.' + id).css('color', settingsObject.colours[id] || defaultSettings.colours[id]);
-            }); 
-            
-            $('.radio input[name=colouring-options][value=' + settingsObject.colouring + ']').prop('checked', true).change();
-            
-            //font size
-            $('#font-range').prop('value', settingsObject.fontSizeScaleFactor)[0].oninput();
+		    //Underline
+		    $('#underline').change(function() {
+		        var example = $('#settings-example-sentence'),
+		            exampleUnderlined = !!$('#settings-example-sentence u').length;
 
-            //audio speed
-            $('#speed-range').prop('value', settingsObject.audioSpeed)[0].oninput();
+		        settingsObject.underlineWord = $(this).is(':checked');
+		        if (settingsObject.underlineWord !== exampleUnderlined) {
+		            toggleUnderline(example);
+		        }
+		        $('#underline-label').text(settingsObject.underlineWord ? "Underlined" : "Not underlined");
+		    });
 
-            //underline
-            $('#underline').prop('checked', settingsObject.underlineWord).change();
+		    //example difficulties
+		    $('.radio input[name=difficulty-options]').change(function() {
+		        if ($(this).is(':checked')) {
+		            settingsObject.difficulty = $(this).val();
+		        }
+		    });
 
-            //example difficulties
-            $('.radio input[name=difficulty-options][value=' + settingsObject.difficulty + ']').prop('checked', true);
+		    //key bindings
+		    $('.set-link').click(function(setEvent) {
+		        $(document).off("keypress.example");
+		        var element = $(this).parent().find('.value');
+		        var initialValue = element.text();
+		        element.html('<input type="text" style="width:35px;height:20px;margin:0px" maxlength="1">');
+		        element.find('input').focus();
 
-            //key bindings
-            _.each($('table#key-bindings tr'), function(tr) {
-                var id = $(tr).attr('id');
-                var char = String.fromCharCode(settingsObject.keyBindings[id]);
-                $(tr).find('td.value kbd').text(char);
-            });
-        }
+		        var inputPending = true;
+		        setEvent.stopPropagation();
 
-        function setModalFontSize(scaleFactor) {
-            scaleElementFontSize("#settings-example-sentence", scaleFactor);
-            scaleElementFontSize("#settings-example-detail", 0.7 * scaleFactor);
-        }
+		        $(document).click(function(event) {
+		            onInput(event);
+		        });
+		        $(document).keypress(function(event) {
+		            onInput(event);
+		        });
 
-        function shiftShowMoreLink() {
-            $('.show-more-link').css("right", "-80px");
-        }
+		        function onInput(e) {
+		            if (inputPending) {
+		                var id = element.parent().attr('id');
+		                element.html('<kbd></kbd>');
+		                var invalidChars = _.where(settingsObject.keyBindings, function(val, key) {
+		                    return key.toString() !== id
+		                }).concat(13);
+		                var char = (e.type === "keypress" && !_.contains(invalidChars, e.which)) ? String.fromCharCode(e.which) : initialValue;
+		                element.find('kbd').text(char);
+		                e.stopPropagation();
+		                inputPending = false;
+		                settingsObject.keyBindings[element.parent().attr('id')] = char.charCodeAt(0);
+		            }
+		            $(this).off(e);
+		        }
+		    });
 
-        function showExample(shouldLoadDOM) {
-            function updateDOM() {
-                if (shouldLoadDOM) {
-                    loadDOM();
-                }
-                renderExample();
-            }
+		    //button click events
+		    $('#save-settings-button').click(function() {
+		        var shouldReloadExamples = settingsObject.difficulty !== localStorageObject.difficulty;
+		        var shouldToggleUnderline = settingsObject.underlineWord !== localStorageObject.underlineWord;
+		        localStorage.setItem(localStorageIdentifier, JSON.stringify(settingsObject));
+		        localStorageObject = jQuery.extend(true, {}, settingsObject);
+		        if (shouldReloadExamples) {
+		            $('#example-html').remove();
+		            resetLocalVars();
+		            showExample(true);
+		        } else {
+		            colourExamples(cachedData.exampleList);
+		            if (shouldToggleUnderline) {
+		                toggleUnderlines(cachedData.exampleList);
+		            }
+		            colourUnderlines(cachedData.exampleList);
+		            showExample();
+		        }
+		        sessionFontSizeScaleFactor = parseFloat(localStorageObject.fontSizeScaleFactor);
+		        setExampleFontSize(sessionFontSizeScaleFactor);
+		    });
+		    $('#reset-settings-button').click(function() {
+		        settingsObject = jQuery.extend(true, {}, defaultSettings);
+		        setModalFields(settingsObject);
+		    });
+		}
 
-            var fetchMoreExamples = !cachedData || (cachedData.total > 0) && (exampleIndex === cachedData.exampleList.length);
-            if (fetchMoreExamples) {
-                pageNo++;
-                $("#next-example").hide();
-                var url = getUrl(encodeURIComponent(word), pageNo);
-                console.log("fetching examples from LINE dictionary, url = " + url);
-                $.get(url, function(data) {
-                    console.log("examples fetched, total number of examples: " + data.total);
-                    onDataLoaded(data);
-                    updateDOM();
-                }, "jsonp");
-            } else {
-                updateDOM();
-            }
-        }
-        
-        function toggleUnderline(element) {
-            $(element).find('u >').unwrap()[0] || $(element).find('strong').wrap('<u></u>');
-            return element;
-        }   
-        
-        function toggleUnderlines(examples) {
-            _.each(examples, function(example) {
-                example.exampleAutolink = _.map($.parseHTML(example.exampleAutolink) || example.exampleAutolink, function(elem) {
-                    return toggleUnderline(elem);
-                });
-            });
-        }     
+		function setModalFields(settingsObject) {
+		    //colours
+		    _.each($('.picker button'), function(elem) {
+		        var id = $(elem).attr('id');
+		        $(elem).css('background-color', settingsObject.colours[id] || defaultSettings.colours[id]);
+		        $('.' + id).css('color', settingsObject.colours[id] || defaultSettings.colours[id]);
+		    });
+
+		    $('.radio input[name=colouring-options][value=' + settingsObject.colouring + ']').prop('checked', true).change();
+
+		    //font size
+		    $('#font-range').prop('value', settingsObject.fontSizeScaleFactor)[0].oninput();
+
+		    //audio speed
+		    $('#speed-range').prop('value', settingsObject.audioSpeed)[0].oninput();
+
+		    //underline
+		    $('#underline').prop('checked', settingsObject.underlineWord).change();
+
+		    //example difficulties
+		    $('.radio input[name=difficulty-options][value=' + settingsObject.difficulty + ']').prop('checked', true);
+
+		    //key bindings
+		    _.each($('table#key-bindings tr'), function(tr) {
+		        var id = $(tr).attr('id');
+		        var char = String.fromCharCode(settingsObject.keyBindings[id]);
+		        $(tr).find('td.value kbd').text(char);
+		    });
+		}
+
+		function setModalFontSize(scaleFactor) {
+		    scaleElementFontSize("#settings-example-sentence", scaleFactor);
+		    scaleElementFontSize("#settings-example-detail", 0.7 * scaleFactor);
+		}
+
+		function shiftShowMoreLink() {
+		    $('.show-more-link').css("right", "-80px");
+		}
+
+		function showExample(shouldLoadDOM) {
+		    function updateDOM() {
+		        if (shouldLoadDOM) {
+		            loadDOM();
+		        }
+		        renderExample();
+		    }
+
+		    var fetchMoreExamples = !cachedData || (cachedData.total > 0) && (exampleIndex === cachedData.exampleList.length);
+		    if (fetchMoreExamples) {
+		        pageNo++;
+		        $("#next-example").hide();
+		        var url = getUrl(encodeURIComponent(word), pageNo);
+		        console.log("fetching examples from LINE dictionary, url = " + url);
+		        $.get(url, function(data) {
+		            console.log("examples fetched, total number of examples: " + data.total);
+		            onDataLoaded(data);
+		            updateDOM();
+		        }, "jsonp");
+		    } else {
+		        updateDOM();
+		    }
+		}
+
+		function toggleUnderline(element) {
+		    $(element).find('u >').unwrap()[0] || $(element).find(':not(:has(*))').filter(function() {
+		        return $(this).get(0).tagName === "STRONG" || $(this).parent().get(0).tagName === "STRONG"; //either strong elements or their childless children
+		    }).wrap('<u></u>');
+		    return element;
+		}
+
+		function toggleUnderlines(examples) {
+		    _.each(examples, function(example) {
+		        example.exampleAutolink = _.map($.parseHTML(example.exampleAutolink) || example.exampleAutolink, function(elem) {
+		            return toggleUnderline(elem);
+		        });
+		    });
+		}
     }
 }());
