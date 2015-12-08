@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          http://www.memrise.com/course/*/garden/*
 // @match          http://www.memrise.com/garden/review/*
-// @version        1.0.2
+// @version        1.0.3
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -32,6 +32,7 @@
             cachedData,
             defaultSettings = {
                 "audioSpeed": 1,
+                "colouring": "hsk", //hsk/tone/none
                 "colours": {
                     "non-hsk": "#000000",
                     "hsk-1": "#E12E2E",
@@ -39,7 +40,12 @@
                     "hsk-3": "#CFBE00",
                     "hsk-4": "#1ca10d",
                     "hsk-5": "#1D8FCC",
-                    "hsk-6": "#db44df"
+                    "hsk-6": "#db44df",
+                    "tone-1": "#e30000",
+                    "tone-2": "#02b31c",
+                    "tone-3": "#1510f0",
+                    "tone-4": "#8900bf",
+                    "tone-5": "#777777",
                 },
                 "difficulty": "all",
                 "fontSizeScaleFactor": 1.3,
@@ -61,7 +67,6 @@
             },
             exampleIndex,
             firstTimeLoad = true,
-            hskHtml,
             hskLevels = [{
                     name: "HSK 1",
                     words: ["爱", "八", "爸爸", "杯子", "北京", "本", "不", "不客气", "菜", "茶", "吃", "出租车", "打电话", "大", "的", "点", "电脑", "电视", "电影", "东西", "都", "读", "对不起", "多", "多少", "儿子", "二", "饭店", "飞机", "分钟", "高兴", "个", "工作", "狗", "汉语", "好", "号", "喝", "和", "很", "后面", "回", "会", "几", "家", "叫", "今天", "九", "开", "看", "看见", "块", "来", "老师", "了", "冷", "里", "六", "妈妈", "吗", "买", "猫", "没关系", "没有", "米饭", "名字", "明天", "哪", "哪儿", "那", "呢", "能", "你", "年", "女儿", "朋友", "漂亮", "苹果", "七", "前面", "钱", "请", "去", "热", "人", "认识", "三", "商店", "上", "上午", "少", "谁", "什么", "十", "时候", "是", "书", "水", "水果", "睡觉", "说", "四", "岁", "他", "她", "太", "天气", "听", "同学", "喂", "我", "我们", "五", "喜欢", "下", "下午", "下雨", "先生", "现在", "想", "小", "小姐", "些", "写", "谢谢", "星期", "学生", "学习", "学校", "一", "一点儿", "衣服", "医生", "医院", "椅子", "有", "月", "再见", "在", "怎么", "怎么样", "这", "中国", "中午", "住", "桌子", "字", "昨天", "坐", "做"]
@@ -132,7 +137,7 @@
 				"							</tr>",
 				"						</thead>",
 				"						<tbody>",
-				"							<tr id='picker'>",
+				"							<tr class='picker'>",
 				"								<td>",
 				"									<button id='non-hsk'></button>", //some sort of button with ▼
 				"								</td>",
@@ -157,7 +162,51 @@
 				"							</tr>",
 				"						</tbody>",
 				"					</table>",
+				"					<table class='table table-striped'>",
+				"						<thead>",
+				"							<tr>",
+				"								<th>First Tone</th>",
+				"								<th>Second Tone</th>",
+				"								<th>Third Tone</th>",
+				"								<th>Fourth Tone</th>",
+				"								<th>No Tone</th>",
+				"							</tr>",
+				"						</thead>",
+				"						<tbody>",
+				"							<tr class='picker'>",
+				"								<td>",
+				"									<button id='tone-1'></button>", 
+				"								</td>",
+				"								<td>",
+				"									<button id='tone-2'></button>",
+				"								</td>",
+				"								<td>",
+				"									<button id='tone-3'></button>",
+				"								</td>",
+				"								<td>",
+				"									<button id='tone-4'></button>",
+				"								</td>",
+				"								<td>",
+				"									<button id='tone-5'></button>",
+				"								</td>",
+				"							</tr>",
+				"						</tbody>",
+				"					</table>",
 				"					<hr>",
+				"					<hr>",
+				"					<h3>Colouring</h3>",
+				"					<div class='radio'>",
+				"						<label>",
+				"							<input type='radio' name='colouring-options' value='hsk' checked=''> Hsk colouring </label>",
+				"					</div>",
+				"					<div class='radio'>",
+				"						<label>",
+				"							<input type='radio' name='colouring-options' value='tone'> Tone colouring </label>",
+				"					</div>",
+				"					<div class='radio'>",
+				"						<label>",
+				"							<input type='radio' name='colouring-options' value='none'> No colouring </label>",
+				"					</div>",
 				"					<h3>Default font size</h3>",
 				"					<div>",
 				"						<input type='range' id='font-range' min='0.8' max='4' step='0.1'>",
@@ -180,15 +229,46 @@
 				"					<hr>",
 				"					<div style='font-size: 1.5em; line-height: 1.6em' align='center'>",
 				"						<div id='settings-example-sentence'>",
-				"							<span class='non-hsk'>哈利</span>",
-				"							<span class='hsk-1'>的</span>",
-				"							<span class='hsk-1'><strong>爸爸</strong></span>",
-				"							<span class='hsk-2'>非常</span>",
-				"							<span class='hsk-3'>关心</span>",
-				"							<span class='hsk-4'>国际</span>",
-				"							<span class='hsk-5'>进口</span>",
-				"							<span class='hsk-6'>指标</span>",
-				"							<span class='non-hsk'>。</span>",        
+				"							<span id='hsk-example'>",
+				"								<span class='non-hsk'>哈利</span>",
+				"								<span class='hsk-1'>的</span>",
+				"								<span class='hsk-1'><strong>爸爸</strong></span>",
+				"								<span class='hsk-2'>非常</span>",
+				"								<span class='hsk-3'>关心</span>",
+				"								<span class='hsk-4'>国际</span>",
+				"								<span class='hsk-5'>进口</span>",
+				"								<span class='hsk-6'>指标</span>",
+				"								<span class='non-hsk'>。</span>",        
+				"							</span>",
+				"							<span id='tone-example'>",
+				"								<span class='tone-1'>哈</span>",
+				"								<span class='tone-4'>利</span>",
+				"								<span class='tone-5'>的</span>",
+				"								<span class='tone-4'><strong>爸</strong></span>",
+				"								<span class='tone-5'><strong>爸</strong></span>",
+				"								<span class='tone-1'>非</span>",
+				"								<span class='tone-2'>常</span>",
+				"								<span class='tone-1'>关</span>",
+				"								<span class='tone-1'>心</span>",
+				"								<span class='tone-2'>国</span>",
+				"								<span class='tone-4'>际</span>",
+				"								<span class='tone-4'>进</span>",
+				"								<span class='tone-3'>口</span>",
+				"								<span class='tone-3'>指</span>",
+				"								<span class='tone-1'>标</span>",
+				"								<span class='tone-hsk'>。</span>",        
+				"							</span>",
+				"							<span id='none-example'>",
+				"								<span>哈利</span>",
+				"								<span>的</span>",
+				"								<span><strong>爸爸</strong></span>",
+				"								<span>非常</span>",
+				"								<span>关心</span>",
+				"								<span>国际</span>",
+				"								<span>进口</span>",
+				"								<span>指标</span>",
+				"								<span>。</span>",        
+				"							</span>",
 				"							<span id='settings-example-audio' style='cursor: pointer; float: right'>🔊</span>",
 				"						</div>",
 				"						<div id='settings-example-detail'>",
@@ -301,7 +381,7 @@
         addToBox("PresentationBox", function(context) {
             var columns = context.thing.columns,
                 columnIndex = _.findKey(columns, function(column) {
-                    return column.val.match(/^[\u2E80-\u2EFF\u3000-\u303F\u31C0-\u31EF\u3300-\u33FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\uFE30-\uFE4F]+$/); //unicode ranges for Chinese
+                    return isChinese(column.val);
                 });
             word = columns[columnIndex].val;
             resetLocalVars();
@@ -329,30 +409,136 @@
         }
 
         function colourExamples(examples) {
+            switch(localStorageObject.colouring || "hsk"){
+                case "hsk":
+                    return colourExamplesByHsk(examples);
+                case "tone":
+                    return colourExamplesByTone(examples);
+                case "none":
+                    return colourExamplesByNothing(examples);
+            }
+        }
+        
+        function colourExamplesByHsk(examples) {
             _.each(examples, function(example) {
-                example.exampleAutolink = _.map($.parseHTML(example.exampleAutolink) || example.exampleAutolink, function(word) {
+                example.exampleAutolink = _.map($.parseHTML(example.exampleAutolink) || example.exampleAutolink, function(elem) {
+                    $(elem).find('[style]').addBack('[style]').removeAttr('style');
+                    
                     var level = _.find(hskLevels, function(level) {
-                        return level.words.indexOf($(word).text()) > -1;
+                        return level.words.indexOf($(elem).text()) > -1;
                     });
 
                     switch (level && level.name) {
                         case "HSK 1":
-                            return $(word).css('color', localStorageObject.colours["hsk-1"])[0];
+                            return $(elem).css('color', localStorageObject.colours["hsk-1"])[0];
                         case "HSK 2":
-                            return $(word).css('color', localStorageObject.colours["hsk-2"])[0];
+                            return $(elem).css('color', localStorageObject.colours["hsk-2"])[0];
                         case "HSK 3":
-                            return $(word).css('color', localStorageObject.colours["hsk-3"])[0];
+                            return $(elem).css('color', localStorageObject.colours["hsk-3"])[0];
                         case "HSK 4":
-                            return $(word).css('color', localStorageObject.colours["hsk-4"])[0];
+                            return $(elem).css('color', localStorageObject.colours["hsk-4"])[0];
                         case "HSK 5":
-                            return $(word).css('color', localStorageObject.colours["hsk-5"])[0];
+                            return $(elem).css('color', localStorageObject.colours["hsk-5"])[0];
                         case "HSK 6":
-                            return $(word).css('color', localStorageObject.colours["hsk-6"])[0];
+                            return $(elem).css('color', localStorageObject.colours["hsk-6"])[0];
                         default:
-                            return $(word).css('color', localStorageObject.colours["non-hsk"])[0];
+                            return $(elem).css('color', localStorageObject.colours["non-hsk"])[0];
                     }
                 });
             });
+        }
+        
+        function colourExamplesByNothing(examples) {
+            _.each(examples, function(example) {
+                example.exampleAutolink = _.map($.parseHTML(example.exampleAutolink) || example.exampleAutolink, function(elem) {
+                    $(elem).find('[style]').addBack('[style]').removeAttr('style');
+                    return $(elem).css('color', "black")[0];
+                });
+            });
+        }
+        
+        function colourExamplesByTone(examples) {
+            _.each(examples, function(example) {
+                var previousCharIsVowel = false,
+                    tones = getTones($($.parseHTML(example.pinyin)).text()),
+                    toneIndex = 0;
+                
+                function colourTone(elem) {
+                    var text = $(elem).text();
+                    if(!isChinese(text)){
+                        //increment the tone index if char is a vowel and the prev char was not
+                        if(text.toLowerCase().match(/aeiou/)) {
+                            if(!previousCharIsVowel) {
+                                toneIndex++;
+                            }
+                            previousCharIsVowel = true;
+                        } else {
+                            previousCharIsVowel = false;
+                        }
+                        return $(elem).css('color', localStorageObject.colours["tone-5"] || defaultSettings.colours["tone-5"]).prop('outerHTML');
+                    } else {
+                        previousCharIsVowel = false;
+                        switch (tones[toneIndex++]) {
+                            case 1:
+                                return $(elem).css('color', localStorageObject.colours["tone-1"] || defaultSettings.colours["tone-1"]).prop('outerHTML');
+                            case 2:
+                                return $(elem).css('color', localStorageObject.colours["tone-2"] || defaultSettings.colours["tone-2"]).prop('outerHTML');
+                            case 3:
+                                return $(elem).css('color', localStorageObject.colours["tone-3"] || defaultSettings.colours["tone-3"]).prop('outerHTML');
+                            case 4:
+                                return $(elem).css('color', localStorageObject.colours["tone-4"] || defaultSettings.colours["tone-4"]).prop('outerHTML');
+                            case 5:
+                                return $(elem).css('color', localStorageObject.colours["tone-5"] || defaultSettings.colours["tone-5"]).prop('outerHTML');
+                        }
+                    }
+                }
+                
+                example.exampleAutolink = _.map($.parseHTML(example.exampleAutolink) || example.exampleAutolink, function(elem) {
+                    $(elem).find('[style]').addBack('[style]').removeAttr('style');
+                    return $(elem).html(function(i, html) {
+                        //wrap non-angle bracket stuff in colour styled spans
+                        return html && html.replace(/<[^>]+>|([^<]+?)/g, function(match, capture){
+                            if(capture) {
+                                return colourTone($.parseHTML("<span>" + capture + "</span>"));
+                            } else {
+                                return match;
+                            }
+                        }) || $(this).text();
+                    });
+                });
+            });
+        }
+        
+        function colourUnderlines(examples) {
+            _.each(examples, function(example) {
+                example.exampleAutolink = _.map($.parseHTML(example.exampleAutolink) || example.exampleAutolink, function(elem) {
+                    $(elem).find('u').css('color', function() {
+                        return $(this).find('[style]').css('color');
+                    });
+                    return elem;
+                });
+            });
+        }
+
+        function getTones(example){
+            var tones = [],
+                vowels = 'āáǎàaēéěèeīíǐìiōóǒòoūúǔùuǖǘǚǜü',
+                regex = new RegExp("[" + vowels + "]+", "g"),
+                matches = example.toLowerCase().match(regex);
+            _.each(matches, function(m){
+                if(m.match(/[āēīōūǖ]/)){
+                    tones.push(1);
+                } else if(m.match(/[áéíóúǘ]/)){
+                    tones.push(2);
+                } else if(m.match(/[ǎěǐǒǔǚ]/)){
+                    tones.push(3);
+                } else if(m.match(/[àèìòùǜ]/)){
+                    tones.push(4);
+                } else {
+                    tones.push(5);
+                }
+            })
+            return tones;
         }
 
         function getUrl(wordURI, pageNo) {
@@ -363,6 +549,10 @@
         function initialiseFontSizes() {
             setExampleFontSize(sessionFontSizeScaleFactor);
             setModalFontSize(localStorageObject.fontSizeScaleFactor);
+        }
+        
+        function isChinese(input){
+            return input.match(/^[\u2E80-\u2EFF\u3000-\u303F\u31C0-\u31EF\u3300-\u33FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\uFE30-\uFE4F]+$/); //unicode ranges for Chinese
         }
 
         function loadModal() {
@@ -389,6 +579,7 @@
             colourExamples(data.exampleList);
             if (localStorageObject.underlineWord) {
                 toggleUnderlines(data.exampleList);
+                colourUnderlines(data.exampleList);
             }
             if (!cachedData) {
                 cachedData = data;
@@ -523,9 +714,9 @@
             });
 
             //colours
-            $('#picker button').colorPicker({
+            $('.picker button').colorPicker({
                 renderCallback: function($elm, toggled) {
-                    if($elm.parents('#picker').length) {
+                    if($elm.parents('.picker').length) {
                         var id = $elm.attr('id'),
                             newColour = $elm.css('background-color');
                         settingsObject.colours[id] = newColour;
@@ -535,7 +726,18 @@
                 buildCallback: function($elm) {
                     $('.cp-color-picker').css('z-index', 2000); //bring to front
                 },              
-            });            
+            });      
+            
+            $('.radio input[name=colouring-options]').change(function() {
+                if ($(this).is(':checked')) {
+                    var choice = $(this).val();
+                    settingsObject.colouring = choice;
+                    $('#hsk-example, #tone-example, #none-example').each(function() {
+                        var parsedId = $(this).attr('id').replace('-example','');
+                        $(this).toggle(choice === parsedId);
+                    });
+                }
+            });
 
             //font size
             $('#font-range')[0].oninput = function() {
@@ -635,6 +837,7 @@
                     if(shouldToggleUnderline){
                         toggleUnderlines(cachedData.exampleList);
                     }
+                    colourUnderlines(cachedData.exampleList);
                     showExample();
                 }
                 sessionFontSizeScaleFactor = parseFloat(localStorageObject.fontSizeScaleFactor);
@@ -648,11 +851,13 @@
 
         function setModalFields(settingsObject) {            
             //colours
-            _.each($('#picker button'), function(elem){
+            _.each($('.picker button'), function(elem){
                 var id = $(elem).attr('id');
-                $(elem).css('background-color', settingsObject.colours[id]);
-                $('.' + id).css('color', settingsObject.colours[id]);
+                $(elem).css('background-color', settingsObject.colours[id] || defaultSettings.colours[id]);
+                $('.' + id).css('color', settingsObject.colours[id] || defaultSettings.colours[id]);
             }); 
+            
+            $('.radio input[name=colouring-options][value=' + settingsObject.colouring + ']').prop('checked', true).change();
             
             //font size
             $('#font-range').prop('value', settingsObject.fontSizeScaleFactor)[0].oninput();
@@ -714,8 +919,8 @@
         
         function toggleUnderlines(examples) {
             _.each(examples, function(example) {
-                example.exampleAutolink = _.map($.parseHTML(example.exampleAutolink) || example.exampleAutolink, function(word) {
-                    return toggleUnderline(word);
+                example.exampleAutolink = _.map($.parseHTML(example.exampleAutolink) || example.exampleAutolink, function(elem) {
+                    return toggleUnderline(elem);
                 });
             });
         }     
