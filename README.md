@@ -1,14 +1,16 @@
 # Memrise Chinese Examples
 
-Userscript which provides example Chinese sentences. When reviewing new/forgotton words you get the following:
+Userscript which provides example Chinese sentences:
+
+![screenshot](images/screenshot.png)
+
+When reviewing new/forgotton words you get the following:
 
 - example Mandarin Chinese sentences from LINE dictionary
 - toggle to show pinyin and english translation
 - navigation buttons to cycle through examples
-- word colouring by HSK level
-
-   ![colour key](http://static.memrise.com/uploads/discuss/6097291000150817004824.gif)
-
+- word colouring by HSK level or tone
+- tone colouring of the word you are learning
 - audio generation of the example sentence
 - keyboard shortcuts:
     * change font size - increase: **+**; decrease - **-**
