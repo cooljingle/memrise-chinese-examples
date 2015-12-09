@@ -1,8 +1,8 @@
 # Memrise Chinese Examples
 
-Userscript which provides example Chinese sentences:
+Userscript which provides example Chinese sentences.
 
-![screenshot](images/screenshot.png)
+<img alt="screenshot" src="images/screenshot.png" width="70%" />
 
 When reviewing new/forgotton words you get the following:
 
@@ -17,7 +17,7 @@ When reviewing new/forgotton words you get the following:
     * toggle example details (pinyin, translation) - **/**
     * navigate examples - **,** and **.**
     * play audio for sentence - **p**
-- configuration of many aspects of the above options, the changes of which are persisted via localstorage.
+- configuration of many aspects of the above options, the changes of which are persisted via localstorage (accessible via the 'Example Settings' link on the left)
 
 ### Installation
 
