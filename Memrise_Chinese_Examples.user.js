@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          http://www.memrise.com/course/*/garden/*
 // @match          http://www.memrise.com/garden/review/*
-// @version        1.0.6
+// @version        1.0.7
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -31,6 +31,7 @@
     function enableExamples() {
         var audioPlaying,
             cachedData,
+            colouredWord,
             defaultSettings = {
                 "audioSpeed": 1,
                 "colouring": "hsk", //hsk/tone/none
@@ -92,7 +93,9 @@
             sessionFontSizeScaleFactor = parseFloat(localStorageObject.fontSizeScaleFactor),
             pageNo,
             pageSize = 20,
+            pinyinColumnIndex,
             word,
+            wordColumnIndex,
             exampleHtml = $([
                 "<div class='row column' id='example-html'>",
                 "   <div class='row-label'>Sentence",
@@ -380,28 +383,32 @@
 
         addToBox("PresentationBox", function(context) {
             var columns = context.thing.columns,
-                columnsGeneral = context.pool.columns,
-                columnIndex = _.findKey(columns, function(column) {
-                    return isChinese(column.val);
-                }),
-                pinyinColumnIndex = _.findKey(columnsGeneral, function(column) {
-                    return column.label.toLowerCase().match(/pinyin/i);
-                });
-            word = columns[columnIndex].val;
-            resetLocalVars();
-            showExample(true);
-            if (pinyinColumnIndex) {
-                var elem = $('.garden-box .column').eq(pinyinColumnIndex - 1).find('.primary-value')[0];
+                columnsGeneral = context.pool.columns;
+            
+            wordColumnIndex = _.findKey(columns, function(column) {
+                return isChinese(column.val);
+            });
+            word = columns[wordColumnIndex].val;
+            pinyinColumnIndex = _.findKey(columnsGeneral, function(column) {
+                return column.label.toLowerCase().match(/pinyin/i);
+            });
+            
+            if(pinyinColumnIndex) {
                 var exampleFormat = [{
                     pinyin: columns[pinyinColumnIndex].val,
                     exampleAutolink: '<span>' + word + '</span>'
                 }];
                 colourExamplesByTone(exampleFormat);
-                $('.garden-box .column[data-column-index=' + columnIndex + '] .primary-value').html(exampleFormat[0].exampleAutolink);
-            }
+                colouredWord = exampleFormat[0].exampleAutolink;
+            };
+            
+            resetLocalVars();
+            showColouredWord();
+            showExample(true);
         });
 
         addToBox("CopyTypingBox", function() {
+            showColouredWord();
             showExample(true);
         });
 
@@ -932,6 +939,12 @@
 
         function shiftShowMoreLink() {
             $('.show-more-link').css("right", "-80px");
+        }
+        
+        function showColouredWord() {
+            if (pinyinColumnIndex) {
+                $('.garden-box .column[data-column-index=' + wordColumnIndex + '] .primary-value').html(colouredWord);
+            }
         }
 
         function showExample(shouldLoadDOM) {
