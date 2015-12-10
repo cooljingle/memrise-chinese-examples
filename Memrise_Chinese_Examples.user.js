@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          http://www.memrise.com/course/*/garden/*
 // @match          http://www.memrise.com/garden/review/*
-// @version        1.0.5
+// @version        1.0.6
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -385,7 +385,7 @@
                     return isChinese(column.val);
                 }),
                 pinyinColumnIndex = _.findKey(columnsGeneral, function(column) {
-                    return column.label.toLowerCase().match(/.*pinyin/i);
+                    return column.label.toLowerCase().match(/pinyin/i);
                 });
             word = columns[columnIndex].val;
             resetLocalVars();
@@ -397,7 +397,7 @@
                     exampleAutolink: '<span>' + word + '</span>'
                 }];
                 colourExamplesByTone(exampleFormat);
-                $('.garden-box .column').eq(columnIndex - 1).find('.primary-value').html(exampleFormat[0].exampleAutolink);
+                $('.garden-box .column[data-column-index=' + columnIndex + '] .primary-value').html(exampleFormat[0].exampleAutolink);
             }
         });
 
@@ -737,8 +737,8 @@
 
                         if (key) {
                             methods[key]();
+                            e.preventDefault();
                         }
-                        e.preventDefault();
                     }
                 }
             });
