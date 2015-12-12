@@ -13,10 +13,8 @@ When reviewing new/forgotton words you get the following:
 - tone colouring of the word you are learning
 - audio generation of the example sentence
 - keyboard shortcuts:
-    * change font size - increase: **+**; decrease - **-**
-    * toggle example details (pinyin, translation) - **/**
-    * navigate examples - **,** and **.**
-    * play audio for sentence - **p**
+
+<img alt="screenshot" src="images/key-bindings.png" width="70%" />
 - configuration of many aspects of the above options, the changes of which are persisted via localstorage (accessible via the 'Example Settings' link on the left)
 
 ### Installation
