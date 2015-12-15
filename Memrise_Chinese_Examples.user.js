@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          http://www.memrise.com/course/*/garden/*
 // @match          http://www.memrise.com/garden/review/*
-// @version        1.0.8
+// @version        1.0.9
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -50,6 +50,7 @@
                     "tone-5": "#777777",
                 },
                 "difficulty": "all",
+                "flashWord": true,
                 "fontSizeScaleFactor": 1.3,
                 "keyBindings": {
                     "next-example-key": 46,
@@ -68,6 +69,7 @@
                 "all": ""
             },
             exampleIndex,
+            flashElement = $("#left-area").append("<div class='message'></div>").find('.message'),
             firstTimeLoad = true,
             hskLevels = [{
                 name: "HSK 1",
@@ -210,6 +212,7 @@
                 "                       <label>",
                 "                           <input type='radio' name='colouring-options' value='none'> No colouring </label>",
                 "                   </div>",
+                "                   <hr>",
                 "                   <h3>Default font size</h3>",
                 "                   <div>",
                 "                       <input type='range' id='font-range' min='0.8' max='4' step='0.1'>",
@@ -298,6 +301,14 @@
                 "                           <input type='radio' name='difficulty-options' value='advanced'> Advanced only </label>",
                 "                   </div>",
                 "                   <hr>",
+                "                   <h3>Word flash</h3>",
+                "                   <div>",
+                "                      <label>",
+                "                       <input id='flash-word' type='checkbox' style='vertical-align: top'>",
+                "                       <output id='flash-word-label' style='margin-left: 20px'></output>",
+                "                      </label>",
+                "                   </div>",
+                "                   <hr>",
                 "                   <h3>Key bindings</h3>",
                 "                   <table id='key-bindings' class='table table-condensed'>",
                 "                       <tbody>",
@@ -382,26 +393,7 @@
             ].join("\n").replace(/[\t\r\n]/g, ""));
 
         addToBox("PresentationBox", function(context) {
-            var columns = context.thing.columns,
-                columnsGeneral = context.pool.columns;
-            
-            wordColumnIndex = _.findKey(columns, function(column) {
-                return isChinese(column.val);
-            });
-            word = columns[wordColumnIndex].val;
-            pinyinColumnIndex = _.findKey(columnsGeneral, function(column) {
-                return column.label.toLowerCase().match(/pinyin/i);
-            });
-            
-            if(pinyinColumnIndex) {
-                var exampleFormat = [{
-                    pinyin: columns[pinyinColumnIndex].val,
-                    exampleAutolink: '<span>' + word + '</span>'
-                }];
-                colourExamplesByTone(exampleFormat);
-                colouredWord = exampleFormat[0].exampleAutolink;
-            };
-            
+            setCurrentWord(context);
             resetLocalVars();
             showColouredWord();
             showExample(true);
@@ -410,6 +402,23 @@
         addToBox("CopyTypingBox", function() {
             showColouredWord();
             showExample(true);
+        });
+        
+        _.each(MEMRISE.garden.box_types, function(box_type) {
+            if(box_type.prototype instanceof MEMRISE.garden.box_types.TestBox) { 
+                box_type.prototype.next_press = (function() {
+                    var cached_function = box_type.prototype.next_press;
+                    return function() {
+                        if(localStorageObject.flashWord !== false) {
+                            var wordDetails = setCurrentWord(this);
+                            if(wordDetails) {
+                                flashWordDetails(wordDetails);
+                            }
+                        }
+                        return cached_function.apply(this, arguments);
+                    };
+                }());
+            }
         });
 
         setKeyboardEvents();
@@ -565,6 +574,20 @@
                 });
             });
         }
+        
+        function flashWordDetails(wordDetails) {
+            var flashDuration = 2000,
+                summary,
+                wordLength = $(wordDetails.exampleAutolink).text().length,
+                wordFontSize = Math.floor(100 / wordLength) + 'px';
+            summary = $(colouredWord[0]).html(function(i, html) {
+                return '<div style="font-size: ' + wordFontSize + ';line-height: ' + wordFontSize + ';">' + html + '</div><div style="font-size: ">' + wordDetails.pinyin + '</div>';
+            });
+            flashElement.html(summary).show().addClass("animated");
+            $.doTimeout(flashDuration, function() {
+                flashElement.hide().removeClass("animated");
+            });
+        }
 
         function getTones(example) {
             var tones = [],
@@ -700,6 +723,29 @@
                     playAudio(cachedData.exampleList[exampleIndex].example, localStorageObject.audioSpeed);
                 }
             });
+        }
+        
+        function setCurrentWord(context) {
+            var columns = context.thing.columns,
+                columnsGeneral = context.pool.columns;
+            
+            wordColumnIndex = _.findKey(columns, function(column) {
+                return isChinese(column.val);
+            });
+            word = columns[wordColumnIndex].val;
+            pinyinColumnIndex = _.findKey(columnsGeneral, function(column) {
+                return column.label.toLowerCase().match(/pinyin|pronunciation/i);
+            });
+            
+            if(pinyinColumnIndex) {
+                var exampleFormat = [{
+                    pinyin: columns[pinyinColumnIndex].val,
+                    exampleAutolink: '<span>' + word + '</span>'
+                }];
+                colourExamplesByTone(exampleFormat);
+                colouredWord = exampleFormat[0].exampleAutolink;
+                return exampleFormat[0];
+            }
         }
 
         function setExampleFontSize(scaleFactor) {
@@ -840,6 +886,12 @@
                 }
             });
 
+            //Word flash 
+            $('#flash-word').change(function() {
+                settingsObject.flashWord = $(this).is(':checked');
+                $('#flash-word-label').text(settingsObject.flashWord ? "On" : "Off");
+            });
+
             //key bindings
             $('.set-link').click(function(setEvent) {
                 $(document).off("keypress.example");
@@ -863,7 +915,7 @@
                         var id = element.parent().attr('id');
                         element.html('<kbd></kbd>');
                         var invalidChars = _.where(settingsObject.keyBindings, function(val, key) {
-                            return key.toString() !== id
+                            return key.toString() !== id;
                         }).concat(13);
                         var char = (e.type === "keypress" && !_.contains(invalidChars, e.which)) ? String.fromCharCode(e.which) : initialValue;
                         element.find('kbd').text(char);
@@ -924,6 +976,9 @@
             //example difficulties
             $('.radio input[name=difficulty-options][value=' + settingsObject.difficulty + ']').prop('checked', true);
 
+            //word flash
+            $('#flash-word').prop('checked', settingsObject.flashWord !== false).change();
+            
             //key bindings
             _.each($('table#key-bindings tr'), function(tr) {
                 var id = $(tr).attr('id');
