@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          http://www.memrise.com/course/*/garden/*
 // @match          http://www.memrise.com/garden/review/*
-// @version        1.0.10
+// @version        1.0.11
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -70,6 +70,7 @@
             },
             exampleIndex,
             flashElement = $("#left-area").append("<div class='message'></div>").find('.message'),
+            flashLoadCount = 0,
             firstTimeLoad = true,
             hskLevels = [{
                 name: "HSK 1",
@@ -583,9 +584,15 @@
             summary = $(colouredWord[0]).html(function(i, html) {
                 return '<div style="font-size: ' + wordFontSize + ';line-height: ' + wordFontSize + ';">' + html + '</div><div style="font-size: ">' + wordDetails.pinyin + '</div>';
             });
-            flashElement.html(summary).show().addClass("animated");
+            flashElement.hide().removeClass("animated");
+            $.doTimeout(100, function() {
+                flashElement.html(summary).show().addClass("animated");
+                flashLoadCount++;
+            });
             $.doTimeout(flashDuration, function() {
-                flashElement.hide().removeClass("animated");
+                if(--flashLoadCount === 0) {
+                    flashElement.hide().removeClass("animated");
+                }
             });
         }
 
