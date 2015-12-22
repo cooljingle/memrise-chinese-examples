@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          http://www.memrise.com/course/*/garden/*
 // @match          http://www.memrise.com/garden/review/*
-// @version        1.0.11
+// @version        1.1.0
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -633,7 +633,7 @@
         }
 
         function isChinese(input) {
-            return typeof(input) === "string" && input.match(/^[\u2E80-\u2EFF\u3000-\u303F\u31C0-\u31EF\u3300-\u33FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\uFE30-\uFE4F]+$/); //unicode ranges for Chinese
+            return typeof(input) === "string" && input.match(/^[\u2E80-\u2EFF\u3000-\u303F\u31C0-\u31EF\u3300-\u33FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\uFE30-\uFE4F]+/); //unicode ranges for Chinese
         }
 
         function loadModal() {
@@ -739,19 +739,22 @@
             wordColumnIndex = _.findKey(columns, function(column) {
                 return isChinese(column.val);
             });
-            word = columns[wordColumnIndex].val;
-            pinyinColumnIndex = _.findKey(columnsGeneral, function(column) {
-                return column.label.toLowerCase().match(/pinyin|pronunciation/i);
-            });
-            
-            if(pinyinColumnIndex) {
-                var exampleFormat = [{
-                    pinyin: columns[pinyinColumnIndex].val,
-                    exampleAutolink: '<span>' + word + '</span>'
-                }];
-                colourExamplesByTone(exampleFormat);
-                colouredWord = exampleFormat[0].exampleAutolink;
-                return exampleFormat[0];
+
+            if(wordColumnIndex) {
+                word = columns[wordColumnIndex].val;
+                pinyinColumnIndex = _.findKey(columnsGeneral, function(column) {
+                    return column.label.toLowerCase().match(/pinyin|pronunciation/i);
+                });
+
+                if(pinyinColumnIndex) {
+                    var exampleFormat = [{
+                        pinyin: columns[pinyinColumnIndex].val,
+                        exampleAutolink: '<span>' + word + '</span>'
+                    }];
+                    colourExamplesByTone(exampleFormat);
+                    colouredWord = exampleFormat[0].exampleAutolink;
+                    return exampleFormat[0];
+                }
             }
         }
 
