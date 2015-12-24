@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          http://www.memrise.com/course/*/garden/*
 // @match          http://www.memrise.com/garden/review/*
-// @version        1.1.1
+// @version        1.1.2
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -507,7 +507,7 @@
                     var text = $(elem).text();
                     if (isChinese(text)) {
                         previousCharIsVowel = false;
-                        if (text === "。") {
+                        if (text.match(/[\u3000-\u303F]+/)) { //ignoring punctuation
                             return $(elem).css('color', localStorageObject.colours["tone-5"] || defaultSettings.colours["tone-5"]).prop('outerHTML');
                         } else if (text === "儿" && !isAltForm) { //accounting for sneaky 儿话音
                             if (tones[toneIndex] === "ér") {
