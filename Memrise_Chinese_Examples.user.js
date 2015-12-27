@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          http://www.memrise.com/course/*/garden/*
 // @match          http://www.memrise.com/garden/review/*
-// @version        1.1.2
+// @version        1.1.3
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -534,7 +534,7 @@
                         }
                     } else {
                         //increment the tone index if char is a vowel and the prev char was not
-                        if (text.toLowerCase().match(/aeiou/)) {
+                        if (text.toLowerCase().match(/[aeiou]/)) {
                             if (!previousCharIsVowel) {
                                 toneIndex++;
                             }
