@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          http://www.memrise.com/course/*/garden/*
 // @match          http://www.memrise.com/garden/review/*
-// @version        1.1.4
+// @version        1.1.5
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -602,7 +602,7 @@
 
         function getTones(example) {
             var tones = [],
-                regex = new RegExp("[āáǎàaēéěèeīíǐìiōóǒòoūúǔùuǖǘǚǜü]+[^āáǎàaēéěèeīíǐìiōóǒòoūúǔùuǖǘǚǜü]*", "g"), // * -> so we can then account for 儿话音
+                regex = new RegExp("[āáǎàaēéěèeīíǐìiōóǒòoūúǔùuǖǘǚǜü]+[^āáǎàaēéěèeīíǐìiōóǒòoūúǔùuǖǘǚǜü]*", "g"), // * -> so we can then account for 儿话音
                 matches = example.toLowerCase().match(regex);
 
             _.each(matches, function(m) {
@@ -610,7 +610,7 @@
                     tones.push("ér");
                 } else if (m.match(/^er[\s.,]/)) { //the pinyin for 儿 is sometimes given
                     tones.push("er");
-                } else if (m.match(/[āēīōūǖ]/)) {
+                } else if (m.match(/[āēīōūǖ]/)) {
                     tones.push(1);
                 } else if (m.match(/[áéíóúǘ]/)) {
                     tones.push(2);
