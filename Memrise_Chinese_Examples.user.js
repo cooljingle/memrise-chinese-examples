@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          http://www.memrise.com/course/*/garden/*
 // @match          http://www.memrise.com/garden/review/*
-// @version        1.1.8
+// @version        1.1.9
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -521,7 +521,7 @@
                         previousCharIsVowel = false;
                         if (text.match(/[\u3000-\u303F]+/)) { //ignoring punctuation
                             return $(elem).css('color', localStorageObject.colours["tone-5"] || defaultSettings.colours["tone-5"]).prop('outerHTML');
-                        } else if (text === "儿" && !isAltForm) { //accounting for sneaky 儿话音
+                        } else if (text === "儿" && !isAltForm) { //accounting for sneaky 儿化音
                             if (tones[toneIndex] === "ér") {
                                 tones[toneIndex] = 2;
                             } else if (tones[toneIndex] === "er") {
@@ -611,7 +611,8 @@
 
         function getTones(example) {
             var tones = [],
-                regex = new RegExp("[āáǎàaēéěèeīíǐìiōóǒòoūúǔùuǖǘǚǜü]+[^āáǎàaēéěèeīíǐìiōóǒòoūúǔùuǖǘǚǜü]*", "g"), // * -> so we can then account for 儿话音
+                //non-vowel(0+) + normal vowel(0+) + accented vowel(0 or 1) + normal vowel(0+) + non-vowel(0+)
+                regex = new RegExp("[^āáǎàaēéěèeīíǐìiōóǒòoūúǔùuǖǘǚǜü]*[aeiou]*[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]{0,1}[aeiou]*[^āáǎàaēéěèeīíǐìiōóǒòoūúǔùuǖǘǚǜü]*", "g"),
                 matches = example.toLowerCase().match(regex);
 
             _.each(matches, function(m) {
