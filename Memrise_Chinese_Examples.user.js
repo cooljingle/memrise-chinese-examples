@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          http://www.memrise.com/course/*/garden/*
 // @match          http://www.memrise.com/garden/review/*
-// @version        1.1.9
+// @version        1.1.10
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -642,9 +642,11 @@
         }
         
         function hideWordFromExample(example) {
-            example.exampleAutolink.forEach(function(l) { l.find("strong").text("*"); });
-            example.pinyin = $($.parseHTML(example.pinyin)).each(function(index,html) { $(html).filter("strong").text("*"); });
-            example.translation = $($.parseHTML(example.translation)).each(function(index,html) { $(html).filter("strong").text("*"); });
+            var alteredExample = {};
+            alteredExample.exampleAutolink = $(example.exampleAutolink).map(function(i, elem) { var c = elem.clone(); c.find("strong").text("*"); return c;} ).get();
+            alteredExample.pinyin = $($.parseHTML(example.pinyin)).each(function(index,html) { $(html).filter("strong").text("*"); });
+            alteredExample.translation = $($.parseHTML(example.translation)).each(function(index,html) { $(html).filter("strong").text("*"); });
+            return alteredExample;
         }
 
         function initialiseFontSizes() {
@@ -708,7 +710,7 @@
         function renderExample() {
             var example = cachedData.exampleList[exampleIndex] || "";
             if(example && isTestBox) {
-                hideWordFromExample(example);
+                example = hideWordFromExample(example);
             }
             $('#example-sentence').html(example.exampleAutolink);
             $('#pinyin').html(example.pinyin);
