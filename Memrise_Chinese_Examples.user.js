@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          http://www.memrise.com/course/*/garden/*
 // @match          http://www.memrise.com/garden/review/*
-// @version        1.1.10
+// @version        1.1.11
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -398,7 +398,7 @@
                 "           <div class='modal-footer'>",
                 "               <button type='button' class='btn btn-info pull-left' id='reset-settings-button'>Reset to defaults</button>",
                 "               <button type='button' class='btn btn-default' data-dismiss='modal'>Cancel</button>",
-                "               <button type='button' class='btn btn-primary' data-dismiss='modal' id='save-settings-button'>Save changes</button>",
+                "               <button type='button' class='btn btn-primary' data-dismiss='modal' id='save-example-settings-button'>Save changes</button>",
                 "           </div>",
                 "       </div>",
                 "   </div>",
@@ -423,7 +423,7 @@
                 return function() {
                     var result = cached_function.apply(this, arguments);
                     isTestBox = box_type.prototype instanceof MEMRISE.garden.box_types.TestBox || box_type === MEMRISE.garden.box_types.TestBox;
-                    if((!isTestBox || localStorageObject.showOnTest) && MEMRISE.garden.box_types) {
+                    if(!isTestBox || localStorageObject.showOnTest) {
                         setCurrentWord(this);
                         if(cachedData && cachedData.translate !== word) {
                             resetLocalVars();
@@ -440,7 +440,7 @@
             box_type.prototype.deactivate = (function() {
                 var cached_function = box_type.prototype.deactivate;
                 return function() {
-                    if(localStorageObject.flashWord !== false) {
+                    if(isTestBox && localStorageObject.flashWord !== false) {
                         var wordDetails = setCurrentWord(this);
                         if(wordDetails) {
                             flashWordDetails(wordDetails);
@@ -973,7 +973,7 @@
             });
 
             //button click events
-            $('#save-settings-button').click(function() {
+            $('#save-example-settings-button').click(function() {
                 console.log("save clicked");
                 var shouldShowExamples = !isTestBox || settingsObject.showOnTest;
                 var shouldReloadExamples = settingsObject.difficulty !== localStorageObject.difficulty || (isTestBox && settingsObject.showOnTest !== localStorageObject.showOnTest);
