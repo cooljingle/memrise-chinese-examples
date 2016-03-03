@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          http://www.memrise.com/course/*/garden/*
 // @match          http://www.memrise.com/garden/review/*
-// @version        1.1.11
+// @version        1.1.12
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -420,16 +420,16 @@
         function addExamples(box_type) {
             box_type.prototype.activate = (function() {
                 var cached_function = box_type.prototype.activate;
-                return function() {
-                    var result = cached_function.apply(this, arguments);
+                return function() 
                     isTestBox = box_type.prototype instanceof MEMRISE.garden.box_types.TestBox || box_type === MEMRISE.garden.box_types.TestBox;
+                    var result = cached_function.apply(this, arguments);
                     if(!isTestBox || localStorageObject.showOnTest) {
                         setCurrentWord(this);
                         if(cachedData && cachedData.translate !== word) {
                             resetLocalVars();
                         }
                         showColouredWord();
-                        showExample(true);
+                        showExample();
                     };
                     return result;
                 };
@@ -984,7 +984,7 @@
                     $('#example-html').remove();
                     if(shouldShowExamples) {
                         resetLocalVars();
-                        showExample(true);
+                        showExample();
                     }
                 } else if (cachedData) {
                     colourExamples(cachedData.exampleList);
@@ -1054,8 +1054,9 @@
             }
         }
 
-        function showExample(shouldLoadDOM) {
+        function showExample() {
             function updateDOM() {
+                var shouldLoadDOM = $('#example-html').length === 0;
                 if (shouldLoadDOM) {
                     loadDOM();
                 }
