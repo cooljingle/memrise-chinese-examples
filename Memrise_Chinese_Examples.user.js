@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          http://www.memrise.com/course/*/garden/*
 // @match          http://www.memrise.com/garden/review/*
-// @version        1.1.13
+// @version        1.1.14
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -643,7 +643,7 @@
         
         function hideWordFromExample(example) {
             var alteredExample = {};
-            alteredExample.exampleAutolink = $(example.exampleAutolink).map(function(i, elem) { var c = elem.clone(); c.find("strong").text("*"); return c;} ).get();
+            alteredExample.exampleAutolink = $(example.exampleAutolink).map(function(i, elem) { var c = $(elem).clone(); c.find("strong").html("*"); return c;} ).get();
             alteredExample.pinyin = $($.parseHTML(example.pinyin)).each(function(index,html) { $(html).filter("strong").text("*"); });
             alteredExample.translation = $($.parseHTML(example.translation)).each(function(index,html) { $(html).filter("strong").text("*"); });
             return alteredExample;
