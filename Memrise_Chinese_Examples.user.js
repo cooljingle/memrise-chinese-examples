@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          http://www.memrise.com/course/*/garden/*
 // @match          http://www.memrise.com/garden/review/*
-// @version        1.1.15
+// @version        1.1.16
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -588,7 +588,7 @@
                 });
             });
         }
-        
+
         function flashWordDetails(wordDetails) {
             var flashDuration = 2000,
                 summary,
@@ -616,7 +616,7 @@
                 matches = example.toLowerCase().match(regex);
 
             _.each(matches, function(m) {
-                if (m.startsWith("ér")) { //later on we'll need this to check for 儿话音 
+                if (m.startsWith("ér")) { //later on we'll need this to check for 儿话音
                     tones.push("ér");
                 } else if (m.match(/^er[\s.,]/)) { //the pinyin for 儿 is sometimes given
                     tones.push("er");
@@ -640,10 +640,10 @@
             return "http://linedict.naver.com/cnen/example/search.dict?query=" +
                 wordURI + "&page=" + pageNo + "&page_size=" + pageSize + "&format=json" + difficulties[localStorageObject.difficulty];
         }
-        
+
         function hideWordFromExample(example) {
             var alteredExample = {};
-            alteredExample.exampleAutolink = $(example.exampleAutolink).map(function(i, elem) { var c = $(elem).clone(); c.find("strong").html("*"); return c;} ).get();
+            alteredExample.exampleAutolink = $(example.exampleAutolink).map(function(i, elem) { var c = $(elem).clone(); c.find("strong").addBack("strong").html("*"); return c;} ).get();
             alteredExample.pinyin = $($.parseHTML(example.pinyin)).each(function(index,html) { $(html).filter("strong").text("*"); });
             alteredExample.translation = $($.parseHTML(example.translation)).each(function(index,html) { $(html).filter("strong").text("*"); });
             return alteredExample;
@@ -760,11 +760,11 @@
                 }
             });
         }
-        
+
         function setCurrentWord(context) {
             var columns = context.thing.columns,
                 columnsGeneral = context.pool.columns;
-            
+
             wordColumnIndex = _.findKey(columns, function(column) {
                 return isChinese(column.val);
             });
@@ -925,7 +925,7 @@
                 }
             });
 
-            //word flash 
+            //word flash
             $('#flash-word').change(function() {
                 settingsObject.flashWord = $(this).is(':checked');
                 $('#flash-word-label').text(settingsObject.flashWord ? "On" : "Off");
@@ -1027,10 +1027,10 @@
 
             //word flash
             $('#flash-word').prop('checked', settingsObject.flashWord !== false).change();
-            
+
             //show on test
             $('#show-on-test').prop('checked', settingsObject.showOnTest).change();
-            
+
             //key bindings
             _.each($('table#key-bindings tr'), function(tr) {
                 var id = $(tr).attr('id');
@@ -1047,7 +1047,7 @@
         function shiftShowMoreLink() {
             $('.show-more-link').css("right", "-80px");
         }
-        
+
         function showColouredWord() {
             if (pinyinColumnIndex) {
                 $('.garden-box .column[data-column-index=' + wordColumnIndex + '] .primary-value').html(colouredWord);
