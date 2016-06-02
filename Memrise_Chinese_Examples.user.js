@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          http://www.memrise.com/course/*/garden/*
 // @match          http://www.memrise.com/garden/review/*
-// @version        1.1.16
+// @version        1.1.17
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -52,6 +52,7 @@
                 "difficulty": "all",
                 "flashWord": true,
                 "fontSizeScaleFactor": 1.3,
+                "hideWordOnTestExample": true,
                 "keyBindings": {
                     "next-example-key": 46,
                     "previous-example-key": 44,
@@ -61,6 +62,7 @@
                     "example-audio-key": 112
                 },
                 "showOnTest": false,
+                "shuffleExamples": true,
                 "underlineWord": true
             },
             difficulties = {
@@ -319,6 +321,19 @@
                 "                      <label>",
                 "                       <input id='show-on-test' type='checkbox' style='vertical-align: top'>",
                 "                       <output id='show-on-test-label' style='margin-left: 20px'></output>",
+                "                      </label>",
+                "                   <h3>Hide word on test example</h3>",
+                "                      <label>",
+                "                       <input id='hide-word-on-test-example' type='checkbox' style='vertical-align: top'>",
+                "                       <output id='hide-word-on-test-example-label' style='margin-left: 20px'></output>",
+                "                      </label>",
+                "                   </div>",
+                "                   <hr>",
+                "                   <h3>Shuffle examples</h3>",
+                "                   <div>",
+                "                      <label>",
+                "                       <input id='shuffle-examples' type='checkbox' style='vertical-align: top'>",
+                "                       <output id='shuffle-examples-label' style='margin-left: 20px'></output>",
                 "                      </label>",
                 "                   </div>",
                 "                   <hr>",
@@ -682,7 +697,9 @@
         }
 
         function onDataLoaded(data) {
-            data.exampleList = _.shuffle(data.exampleList);
+            if(localStorageObject.shuffleExamples !== false) {
+                data.exampleList = _.shuffle(data.exampleList);
+            }
             colourExamples(data.exampleList);
             if (localStorageObject.underlineWord) {
                 toggleUnderlines(data.exampleList);
@@ -709,7 +726,7 @@
 
         function renderExample() {
             var example = cachedData.exampleList[exampleIndex] || "";
-            if(example && isTestBox) {
+            if(example && isTestBox && localStorageObject.hideWordOnTestExample !== false) {
                 example = hideWordFromExample(example);
             }
             $('#example-sentence').html(example.exampleAutolink);
@@ -937,6 +954,18 @@
                 $('#show-on-test-label').text(settingsObject.showOnTest ? "On" : "Off");
             });
 
+            //hide word on test example
+            $('#hide-word-on-test-example').change(function() {
+                settingsObject.hideWordOnTestExample = $(this).is(':checked');
+                $('#hide-word-on-test-example-label').text(settingsObject.hideWordOnTestExample ? "On" : "Off");
+            });
+
+            //shuffle examples
+            $('#shuffle-examples').change(function() {
+                settingsObject.shuffleExample = $(this).is(':checked');
+                $('#shuffle-examples-label').text(settingsObject.shuffleExample ? "On" : "Off");
+            });
+
             //key bindings
             $('.set-link').click(function(setEvent) {
                 $(document).off("keypress.example");
@@ -1030,6 +1059,12 @@
 
             //show on test
             $('#show-on-test').prop('checked', settingsObject.showOnTest).change();
+
+            //hide word on test example
+            $('#hide-word-on-test-example').prop('checked', settingsObject.hideWordOnTestExample !== false).change();
+
+            //shuffle examples
+            $('#shuffle-examples').prop('checked', settingsObject.shuffleExamples !== false).change();
 
             //key bindings
             _.each($('table#key-bindings tr'), function(tr) {
