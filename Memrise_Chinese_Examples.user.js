@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          http://www.memrise.com/course/*/garden/*
 // @match          http://www.memrise.com/garden/review/*
-// @version        1.1.17
+// @version        1.1.18
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -698,6 +698,7 @@
 
         function onDataLoaded(data) {
             if(localStorageObject.shuffleExamples !== false) {
+                debugger;
                 data.exampleList = _.shuffle(data.exampleList);
             }
             colourExamples(data.exampleList);
@@ -962,8 +963,8 @@
 
             //shuffle examples
             $('#shuffle-examples').change(function() {
-                settingsObject.shuffleExample = $(this).is(':checked');
-                $('#shuffle-examples-label').text(settingsObject.shuffleExample ? "On" : "Off");
+                settingsObject.shuffleExamples = $(this).is(':checked');
+                $('#shuffle-examples-label').text(settingsObject.shuffleExamples ? "On" : "Off");
             });
 
             //key bindings
