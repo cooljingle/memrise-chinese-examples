@@ -698,7 +698,6 @@
 
         function onDataLoaded(data) {
             if(localStorageObject.shuffleExamples !== false) {
-                debugger;
                 data.exampleList = _.shuffle(data.exampleList);
             }
             colourExamples(data.exampleList);
