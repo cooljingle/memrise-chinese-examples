@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          http://www.memrise.com/course/*/garden/*
 // @match          http://www.memrise.com/garden/review/*
-// @version        1.1.18
+// @version        1.1.19
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -627,7 +627,7 @@
         function getTones(example) {
             var tones = [],
                 //non-vowel(0+) + normal vowel(0+) + accented vowel(0 or 1) + normal vowel(0+) + non-vowel(0+)
-                regex = new RegExp("[^āáǎàaēéěèeīíǐìiōóǒòoūúǔùuǖǘǚǜü]*[aeiou]*[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]{0,1}[aeiou]*[^āáǎàaēéěèeīíǐìiōóǒòoūúǔùuǖǘǚǜü]*", "g"),
+                regex = new RegExp("[^āáǎăàaēéěĕèeīíǐĭìiōóǒŏòoūúǔŭùuǖǘǚǜü]*[aeiou]*[āáǎăàēéěĕèīíǐĭìōóǒŏòūúǔŭùǖǘǚǜ]{0,1}[aeiou]*[^āáǎăàaēéěĕèeīíǐĭìiōóǒŏòoūúǔŭùuǖǘǚǜü]*", "g"),
                 matches = example.toLowerCase().match(regex);
 
             _.each(matches, function(m) {
