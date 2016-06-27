@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          http://www.memrise.com/course/*/garden/*
 // @match          http://www.memrise.com/garden/review/*
-// @version        1.1.19
+// @version        1.1.20
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -639,7 +639,7 @@
                     tones.push(1);
                 } else if (m.match(/[áéíóúǘ]/)) {
                     tones.push(2);
-                } else if (m.match(/[ǎěǐǒǔǚ]/)) {
+                } else if (m.match(/[ǎăěĕǐĭǒŏǔŭǚ]/)) {
                     tones.push(3);
                 } else if (m.match(/[àèìòùǜ]/)) {
                     tones.push(4);
