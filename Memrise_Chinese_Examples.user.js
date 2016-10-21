@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          http://www.memrise.com/course/*/garden/*
 // @match          http://www.memrise.com/garden/review/*
-// @version        1.1.20
+// @version        1.1.21
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -20,7 +20,7 @@
         var cached_function = MEMRISE.garden.boxes.load;
         return function() {
             var result = cached_function.apply(this, arguments);
-            if (MEMRISE.garden.session.category.name === "Mandarin Chinese (Simplified)") {
+            if (MEMRISE.garden.session.category.name === "Chinese (Simplified)") {
                 console.log("enabling showing of example Chinese sentences");
                 enableExamples();
             }
