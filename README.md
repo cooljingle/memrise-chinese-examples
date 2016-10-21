@@ -26,4 +26,4 @@ The easiest method is through an extension/add-on on chrome/firefox:
 
 Then add the script using the following link: https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 
-Memrise forum thread: http://www.memrise.com/thread/1363916/
+Memrise forum thread: https://community.memrise.com/t/example-sentences-userscript/5856
