@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          https://www.memrise.com/course/*/garden/*
 // @match          https://www.memrise.com/garden/review/*
-// @version        1.2.0
+// @version        1.2.1
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -659,7 +659,7 @@ $(document).ready(function() {
             }
 
             function hideWordFromExample(example) {
-                var alteredExample = {};
+                var alteredExample = $.extend({}, example);
                 alteredExample.exampleAutolink = $(example.exampleAutolink).map(function(i, elem) { var c = $(elem).clone(); c.find("strong").addBack("strong").html("*"); return c;} ).get();
                 alteredExample.pinyin = $($.parseHTML(example.pinyin)).each(function(index,html) { $(html).filter("strong").text("*"); });
                 alteredExample.translation = $($.parseHTML(example.translation)).each(function(index,html) { $(html).filter("strong").text("*"); });
@@ -736,31 +736,29 @@ $(document).ready(function() {
             function renderExample() {
                 var example = cachedData.exampleList[exampleIndex] || "";
 
-                function transformExample(example, callback){
+                if(isTraditional && !example.traditional) {
+                    simpToTrad(example.example, function(trad) {
+                        var index = 0;
+                        $(example.exampleAutolink).each(function(i, e){
+                            var innerSpan = $(e).find('span');
+                            var elem = innerSpan.length ? innerSpan : $(e);
+                            elem.text(function(i, e){
+                                var newText = trad.substring(index, index + e.length);
+                                index += e.length;
+                                return newText;
+                            });
+                        });
+                        example.traditional = true;
+                        onTranslate(example);
+                    });
+                } else {
+                    onTranslate(example);
+                }
+
+                function onTranslate(example) {
                     if(example && isTestBox && localStorageObject.hideWordOnTestExample !== false) {
                         example = hideWordFromExample(example);
                     }
-                    if(isTraditional && !example.traditional) {
-                        simpToTrad(example.example, function(trad) {
-                            var index = 0;
-                            $(example.exampleAutolink).each(function(i, e){
-                                var innerSpan = $(e).find('span');
-                                var elem = innerSpan.length ? innerSpan : $(e);
-                                elem.text(function(i, e){
-                                    var newText = trad.substring(index, index + e.length);
-                                    index += e.length;
-                                    return newText;
-                                });
-                            });
-                            example.traditional = true;
-                            callback(example);
-                        });
-                    } else {
-                        callback(example);
-                    }
-                }
-
-                transformExample(example, function(example) {
                     $('#example-sentence').html(example.exampleAutolink);
                     $('#pinyin').html(example.pinyin);
                     $('#translation').html(example.translation);
@@ -769,7 +767,7 @@ $(document).ready(function() {
                     $('#next-example').toggle(exampleIndex + 1 < cachedData.total);
                     $('#example-detail-toggle').toggle(!!example);
                     $('#example-audio').toggle(!!example);
-                });
+                };
             }
 
             function resetLocalVars() {
