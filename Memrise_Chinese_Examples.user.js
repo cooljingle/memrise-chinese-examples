@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          https://www.memrise.com/course/*/garden/*
 // @match          https://www.memrise.com/garden/review/*
-// @version        1.1.24
+// @version        1.2.0
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -21,15 +21,15 @@ $(document).ready(function() {
             var cached_function = MEMRISE.garden.boxes.load;
             return function() {
                 var result = cached_function.apply(this, arguments);
-                if (MEMRISE.garden.session.category.name === "Chinese (Simplified)") {
+                if (MEMRISE.garden.session.category.name === "Chinese (Simplified)" || MEMRISE.garden.session.category.name === "Chinese (Traditional)") {
                     console.log("enabling showing of example Chinese sentences");
-                    enableExamples();
+                    enableExamples(MEMRISE.garden.session.category.name);
                 }
                 return result;
             };
         }());
 
-        function enableExamples() {
+        function enableExamples(lang) {
             var audioPlaying,
                 cachedData,
                 colouredWord,
@@ -99,25 +99,26 @@ $(document).ready(function() {
                 localStorageIdentifier = "memrise-chinese-examples",
                 localStorageObject = JSON.parse(localStorage.getItem(localStorageIdentifier)) || jQuery.extend(true, {}, defaultSettings),
                 sessionFontSizeScaleFactor = parseFloat(localStorageObject.fontSizeScaleFactor),
-                pageNo,
+                pageNo = 0,
                 pageSize = 20,
                 pinyinColumnIndex,
+                isTraditional = lang === "Chinese (Traditional)",
                 word,
                 wordColumnIndex,
                 exampleHtml = $([
                     "<span class='thing-show show-more' id='example-html'>",
                     "	<div class='row column'>",
                     "	   <div class='row-label'>Sentence",
-                    "	       <a id='next-example' style='cursor: pointer; color: green; display:none'>	↻</a>",
+                    "	       <a id='next-example' style='cursor: pointer; color: green; display:none'>↻</a>",
                     "	   </div>",
                     "	   <div class='row-label' style='top:34px'>",
-                    "	       <a id='previous-example' style='cursor: pointer; color: purple; d	isplay:none'>↺</a>",
+                    "	       <a id='previous-example' style='cursor: pointer; color: purple; display:none'>↺</a>",
                     "	   </div>",
                     "	   <div class='row-value'>",
-                    "	       <span id='example-audio' style='vertical-align: text-top; cursor: p	ointer; float: right; display:none'>🔊</span>",
+                    "	       <span id='example-audio' style='vertical-align: text-top; cursor: pointer; float: right; display:none'>🔊</span>",
                     "	       <div class='primary-value'>",
                     "	           <span id='example-sentence'></span>",
-                    "	           <a id='example-detail-toggle' style='cursor: pointer; color: #	AAAAAA; display:none'>+</a>",
+                    "	           <a id='example-detail-toggle' style='cursor: pointer; color: #AAAAAA; display:none'>+</a>",
                     "	       </div>",
                     "	       <div id='example-detail' style='display:none'>",
                     "	           <div id='pinyin'></div>",
@@ -652,9 +653,9 @@ $(document).ready(function() {
                 return tones;
             }
 
-            function getUrl(wordURI, pageNo) {
+            function getUrl(word, pageNo) {
                 return "http://linedict.naver.com/cnen/example/search.dict?query=" +
-                    wordURI + "&page=" + pageNo + "&page_size=" + pageSize + "&format=json" + difficulties[localStorageObject.difficulty];
+                    encodeURIComponent(word) + "&page=" + pageNo + "&page_size=" + pageSize + "&format=json" + difficulties[localStorageObject.difficulty];
             }
 
             function hideWordFromExample(example) {
@@ -714,30 +715,61 @@ $(document).ready(function() {
             }
 
             function playAudio(word, speed) {
-                var audioElement = document.createElement('audio');
-                var audioLink = 'http://tts.cndic.naver.com/tts/mp3ttsV1.cgi?spk_id=250&text_fmt=0&pitch=100&volume=100&speed=' + 80 * speed + '&wrapper=0&enc=0&text=' +
-                    encodeURIComponent(word);
-                audioElement.setAttribute('src', audioLink);
-                audioElement.play();
-                audioPlaying = true;
-                $(audioElement).on('ended', function() {
-                    audioPlaying = false;
-                });
+                function onWordFetched(word) {
+                    var audioElement = document.createElement('audio');
+                    var audioLink = 'http://tts.cndic.naver.com/tts/mp3ttsV1.cgi?spk_id=250&text_fmt=0&pitch=100&volume=100&speed=' + 80 * speed + '&wrapper=0&enc=0&text=' +
+                        encodeURIComponent(word);
+                    audioElement.setAttribute('src', audioLink);
+                    audioElement.play();
+                    audioPlaying = true;
+                    $(audioElement).on('ended', function() {
+                        audioPlaying = false;
+                    });
+                }
+                if(isTraditional) {
+                    tradToSimp(word, onWordFetched);
+                } else {
+                    onWordFetched(word);
+                }
             }
 
             function renderExample() {
                 var example = cachedData.exampleList[exampleIndex] || "";
-                if(example && isTestBox && localStorageObject.hideWordOnTestExample !== false) {
-                    example = hideWordFromExample(example);
-                }
-                $('#example-sentence').html(example.exampleAutolink);
-                $('#pinyin').html(example.pinyin);
-                $('#translation').html(example.translation);
 
-                $('#previous-example').toggle(exampleIndex > 0);
-                $('#next-example').toggle(exampleIndex + 1 < cachedData.total);
-                $('#example-detail-toggle').toggle(!!example);
-                $('#example-audio').toggle(!!example);
+                function transformExample(example, callback){
+                    if(example && isTestBox && localStorageObject.hideWordOnTestExample !== false) {
+                        example = hideWordFromExample(example);
+                    }
+                    if(isTraditional && !example.traditional) {
+                        simpToTrad(example.example, function(trad) {
+                            var index = 0;
+                            $(example.exampleAutolink).each(function(i, e){
+                                var innerSpan = $(e).find('span');
+                                var elem = innerSpan.length ? innerSpan : $(e);
+                                elem.text(function(i, e){
+                                    var newText = trad.substring(index, index + e.length);
+                                    index += e.length;
+                                    return newText;
+                                });
+                            });
+                            example.traditional = true;
+                            callback(example);
+                        });
+                    } else {
+                        callback(example);
+                    }
+                }
+
+                transformExample(example, function(example) {
+                    $('#example-sentence').html(example.exampleAutolink);
+                    $('#pinyin').html(example.pinyin);
+                    $('#translation').html(example.translation);
+
+                    $('#previous-example').toggle(exampleIndex > 0);
+                    $('#next-example').toggle(exampleIndex + 1 < cachedData.total);
+                    $('#example-detail-toggle').toggle(!!example);
+                    $('#example-audio').toggle(!!example);
+                });
             }
 
             function resetLocalVars() {
@@ -1090,20 +1122,13 @@ $(document).ready(function() {
                 }
             }
 
-            function showExample() {
-                function updateDOM() {
-                    var shouldLoadDOM = $('#example-html').length === 0;
-                    if (shouldLoadDOM) {
-                        loadDOM();
-                    }
-                    renderExample();
-                }
+            function simpToTrad(text, callback){
+                translate("zh-CN", "zh-TW", text, callback);
+            }
 
-                var fetchMoreExamples = !cachedData || (cachedData.total > 0) && (exampleIndex === cachedData.exampleList.length);
-                if (fetchMoreExamples) {
-                    pageNo++;
-                    $("#next-example").hide();
-                    var url = getUrl(encodeURIComponent(word), pageNo);
+            function showExample() {
+                function fetchAndShow(word) {
+                    var url = getUrl(word, pageNo);
                     console.log("fetching examples from LINE dictionary, url = " + url);
                     $.ajax({
                         url: "https://cors-anywhere.herokuapp.com/" + url,
@@ -1117,6 +1142,24 @@ $(document).ready(function() {
                             }
                         }
                     });
+                }
+                function updateDOM() {
+                    var shouldLoadDOM = $('#example-html').length === 0;
+                    if (shouldLoadDOM) {
+                        loadDOM();
+                    }
+                    renderExample();
+                }
+
+                var shouldFetchMoreExamples = !cachedData || (cachedData.total > 0) && (exampleIndex === cachedData.exampleList.length);
+                if (shouldFetchMoreExamples) {
+                    pageNo++;
+                    $("#next-example").hide();
+                    if(isTraditional) {
+                        tradToSimp(word, fetchAndShow);
+                    } else {
+                        fetchAndShow(word);
+                    }
                 } else {
                     updateDOM();
                 }
@@ -1135,6 +1178,19 @@ $(document).ready(function() {
                         return toggleUnderline(elem);
                     });
                 });
+            }
+
+            function tradToSimp(text, callback){
+                translate("zh-TW", "zh-CN", text, callback);
+            }
+
+            function translate(sourceLang, targetLang, text, callback){
+                fetch("https://translate.googleapis.com/translate_a/single?client=gtx&sl=" + sourceLang + "&tl=" + targetLang + "&dt=t&q=" + encodeURIComponent(text) , {method: 'get'})
+                    .then(function(response){ return response.text(); })
+                    .then(function(text){
+                        var translation = text.match(/[^["]+/)[0];
+                        callback(translation);
+                    });
             }
         }
     }());
