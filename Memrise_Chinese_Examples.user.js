@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          https://www.memrise.com/course/*/garden/*
 // @match          https://www.memrise.com/garden/review/*
-// @version        1.2.1
+// @version        1.2.2
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -101,10 +101,9 @@ $(document).ready(function() {
                 sessionFontSizeScaleFactor = parseFloat(localStorageObject.fontSizeScaleFactor),
                 pageNo = 0,
                 pageSize = 20,
-                pinyinColumnIndex,
+                pinyin,
                 isTraditional = lang === "Chinese (Traditional)",
                 word,
-                wordColumnIndex,
                 exampleHtml = $([
                     "<span class='thing-show show-more' id='example-html'>",
                     "	<div class='row column'>",
@@ -810,22 +809,16 @@ $(document).ready(function() {
             }
 
             function setCurrentWord(context) {
-                var columns = context.thing.columns,
-                    columnsGeneral = context.pool.columns;
+                word = _.filter([context.learnable.item.value, context.learnable.definition.value], x => isChinese(x))[0];
 
-                wordColumnIndex = _.findKey(columns, function(column) {
-                    return isChinese(column.val);
-                });
-
-                if(wordColumnIndex) {
-                    word = columns[wordColumnIndex].val;
-                    pinyinColumnIndex = _.findKey(columnsGeneral, function(column) {
+                if(word) {
+                    pinyin = _.filter(context.learnable.columns, function(column) {
                         return column.label.toLowerCase().match(/pinyin|pronunciation/i);
-                    });
+                    })[0].value;
 
-                    if(pinyinColumnIndex) {
+                    if(pinyin) {
                         var exampleFormat = [{
-                            pinyin: columns[pinyinColumnIndex].val,
+                            pinyin: pinyin,
                             exampleAutolink: '<span>' + word + '</span>'
                         }];
                         colourExamplesByTone(exampleFormat);
@@ -1115,8 +1108,8 @@ $(document).ready(function() {
             }
 
             function showColouredWord() {
-                if (pinyinColumnIndex) {
-                    $('.garden-box .column[data-column-index=' + wordColumnIndex + '] .primary-value').html(colouredWord);
+                if (pinyin) {
+                    $('.garden-box .column .primary-value').filter(function(){return $(this).text().trim() === word;}).html(colouredWord);
                 }
             }
 
