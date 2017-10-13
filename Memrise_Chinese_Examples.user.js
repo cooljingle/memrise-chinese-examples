@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          https://www.memrise.com/course/*/garden/*
 // @match          https://www.memrise.com/garden/review/*
-// @version        1.2.2
+// @version        1.2.3
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -480,7 +480,7 @@ $(document).ready(function() {
 
             function colourExamplesByHsk(examples) {
                 _.each(examples, function(example) {
-                    example.exampleAutolink = _.map($.parseHTML(example.exampleAutolink) || example.exampleAutolink, function(elem) {
+                    example.exampleAutolink = _.map($.parseHTML(example.exampleAutolink), function(elem) {
                         $(elem).find('[style]').addBack('[style]').removeAttr('style');
 
                         var level = _.find(hskLevels, function(level) {
@@ -489,30 +489,30 @@ $(document).ready(function() {
 
                         switch (level && level.name) {
                             case "HSK 1":
-                                return $(elem).css('color', localStorageObject.colours["hsk-1"])[0];
+                                return $(elem).css('color', localStorageObject.colours["hsk-1"])[0].outerHTML;
                             case "HSK 2":
-                                return $(elem).css('color', localStorageObject.colours["hsk-2"])[0];
+                                return $(elem).css('color', localStorageObject.colours["hsk-2"])[0].outerHTML;
                             case "HSK 3":
-                                return $(elem).css('color', localStorageObject.colours["hsk-3"])[0];
+                                return $(elem).css('color', localStorageObject.colours["hsk-3"])[0].outerHTML;
                             case "HSK 4":
-                                return $(elem).css('color', localStorageObject.colours["hsk-4"])[0];
+                                return $(elem).css('color', localStorageObject.colours["hsk-4"])[0].outerHTML;
                             case "HSK 5":
-                                return $(elem).css('color', localStorageObject.colours["hsk-5"])[0];
+                                return $(elem).css('color', localStorageObject.colours["hsk-5"])[0].outerHTML;
                             case "HSK 6":
-                                return $(elem).css('color', localStorageObject.colours["hsk-6"])[0];
+                                return $(elem).css('color', localStorageObject.colours["hsk-6"])[0].outerHTML;
                             default:
-                                return $(elem).css('color', localStorageObject.colours["non-hsk"])[0];
+                                return $(elem).css('color', localStorageObject.colours["non-hsk"])[0].outerHTML;
                         }
-                    });
+                    }).join('');
                 });
             }
 
             function colourExamplesByNothing(examples) {
                 _.each(examples, function(example) {
-                    example.exampleAutolink = _.map($.parseHTML(example.exampleAutolink) || example.exampleAutolink, function(elem) {
+                    example.exampleAutolink = _.map($.parseHTML(example.exampleAutolink), function(elem) {
                         $(elem).find('[style]').addBack('[style]').removeAttr('style');
-                        return $(elem).css('color', "black")[0];
-                    });
+                        return $(elem).css('color', "black")[0].outerHTML;
+                    }).join('');
                 });
             }
 
@@ -574,34 +574,31 @@ $(document).ready(function() {
                         }
                     }
 
-                    example.exampleAutolink = _.map($.parseHTML(example.exampleAutolink) || example.exampleAutolink, function(elem) {
+                    example.exampleAutolink = _.map($.parseHTML(example.exampleAutolink), function(elem) {
                         $(elem).find('[style]').addBack('[style]').removeAttr('style');
                         if (!$(elem).get(0).tagName) {
                             elem = $.parseHTML("<span>" + $(elem).text() + "</span>");
                         }
-                        return $(elem).html(function(i, html) {
-                            html = html || $(this).text();
-                            //wrap non-angle bracket stuff in colour styled spans
-                            return html.replace(/<[^>]+>|([^<]+?)/g, function(match, capture) {
-                                if (capture) {
-                                    return colourTone($.parseHTML("<span>" + capture + "</span>"));
-                                } else {
-                                    return match;
-                                }
-                            });
+                        //wrap non-angle bracket stuff in colour styled spans
+                        return $(elem).html().replace(/<[^>]+>|([^<]+?)/g, function(match, capture) {
+                            if (capture) {
+                                return colourTone($.parseHTML("<span>" + capture + "</span>"));
+                            } else {
+                                return match;
+                            }
                         });
-                    });
+                    }).join('');
                 });
             }
 
             function colourUnderlines(examples) {
                 _.each(examples, function(example) {
-                    example.exampleAutolink = _.map($.parseHTML(example.exampleAutolink) || example.exampleAutolink, function(elem) {
+                    example.exampleAutolink = _.map($.parseHTML(example.exampleAutolink), function(elem) {
                         $(elem).find('u').css('color', function() {
                             return $(this).find('[style]').css('color');
                         });
-                        return elem;
-                    });
+                        return elem.outerHTML;
+                    }).join('');
                 });
             }
 
@@ -610,9 +607,7 @@ $(document).ready(function() {
                     summary,
                     wordLength = $(wordDetails.exampleAutolink).text().length,
                     wordFontSize = Math.floor(100 / wordLength) + 'px';
-                summary = $(colouredWord[0]).html(function(i, html) {
-                    return '<div style="font-size: ' + wordFontSize + ';line-height: ' + wordFontSize + ';">' + html + '</div><div style="font-size: ">' + wordDetails.pinyin + '</div>';
-                });
+                summary = $.parseHTML(`<div style="font-size: ${wordFontSize};line-height: ${wordFontSize};">${colouredWord}</div><div>${wordDetails.pinyin}</div>`);
                 flashElement.hide().removeClass("animated");
                 $.doTimeout(100, function() {
                     flashElement.html(summary).show().addClass("animated");
@@ -1165,9 +1160,9 @@ $(document).ready(function() {
 
             function toggleUnderlines(examples) {
                 _.each(examples, function(example) {
-                    example.exampleAutolink = _.map($.parseHTML(example.exampleAutolink) || example.exampleAutolink, function(elem) {
-                        return toggleUnderline(elem);
-                    });
+                    example.exampleAutolink = _.map($.parseHTML(example.exampleAutolink), function(elem) {
+                        return toggleUnderline(elem).outerHTML;
+                    }).join('');
                 });
             }
 
