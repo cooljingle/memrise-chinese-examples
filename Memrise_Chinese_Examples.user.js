@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          https://www.memrise.com/course/*/garden/*
 // @match          https://www.memrise.com/garden/review/*
-// @version        1.2.3
+// @version        1.2.4
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -804,12 +804,12 @@ $(document).ready(function() {
             }
 
             function setCurrentWord(context) {
-                word = _.filter([context.learnable.item.value, context.learnable.definition.value], x => isChinese(x))[0];
+                var wordMatch = _.find([context.learnable.item, context.learnable.definition], x => x.kind === "text" && isChinese(x.value));
+                word = wordMatch && wordMatch.value;
 
                 if(word) {
-                    pinyin = _.filter(context.learnable.columns, function(column) {
-                        return column.label.toLowerCase().match(/pinyin|pronunciation/i);
-                    })[0].value;
+                    var pinyinMatch = _.find(context.learnable.columns, c => c.kind === "text" && c.label.toLowerCase().match(/pinyin|pronunciation/i));
+                    pinyin = pinyinMatch && pinyinMatch.value;
 
                     if(pinyin) {
                         var exampleFormat = [{
