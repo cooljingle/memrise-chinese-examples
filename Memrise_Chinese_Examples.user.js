@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          https://www.memrise.com/course/*/garden/*
 // @match          https://www.memrise.com/garden/review/*
-// @version        1.2.5
+// @version        1.2.6
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -420,26 +420,22 @@ $(document).ready(function() {
                     "</div>"
                 ].join("\n").replace(/[\t\r\n]/g, ""));
 
-            _.each(MEMRISE.garden.box_types, function(box_type) {
-                if(box_type !== MEMRISE.garden.box_types.EndOfSessionBox) {
-                    addExamples(box_type);
-                    addWordFlash(box_type);
-                }
-            });
+            addExamples();
+            addWordFlash();
 
             setKeyboardEvents();
             loadModal();
 
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-            function addExamples(box_type) {
-                box_type.prototype.activate = (function() {
-                    var cached_function = box_type.prototype.activate;
-                    return function() {
-                        isTestBox = box_type.prototype instanceof MEMRISE.garden.box_types.TestBox || box_type === MEMRISE.garden.box_types.TestBox;
+            function addExamples() {
+                MEMRISE.garden.session.make_box = (function () {
+                    var cached_function = MEMRISE.garden.session.make_box;
+                    return function () {
                         var result = cached_function.apply(this, arguments);
+                        isTestBox = !!result.testData
                         if(!isTestBox || localStorageObject.showOnTest) {
-                            setCurrentWord(this);
+                            setCurrentWord(result);
                             if(cachedData && cachedData.query !== word) {
                                 resetLocalVars();
                             }
@@ -451,17 +447,19 @@ $(document).ready(function() {
                 }());
             }
 
-            function addWordFlash(box_type) {
-                box_type.prototype.deactivate = (function() {
-                    var cached_function = box_type.prototype.deactivate;
+            function addWordFlash() {
+                MEMRISE.garden.boxes.deactivate_box = (function() {
+                    var cached_function = MEMRISE.garden.boxes.deactivate_box
                     return function() {
-                        if(isTestBox && localStorageObject.flashWord !== false) {
-                            var wordDetails = setCurrentWord(this);
-                            if(wordDetails) {
-                                flashWordDetails(wordDetails);
+                        if(this.current().template !== "end_of_session") {
+                            if(isTestBox && localStorageObject.flashWord !== false) {
+                                var wordDetails = setCurrentWord(this.current());
+                                if(wordDetails) {
+                                    flashWordDetails(wordDetails);
+                                }
                             }
+                            return cached_function.apply(this, arguments);
                         }
-                        return cached_function.apply(this, arguments);
                     };
                 }());
             }
