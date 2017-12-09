@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          https://www.memrise.com/course/*/garden/*
 // @match          https://www.memrise.com/garden/review/*
-// @version        1.2.7
+// @version        1.2.8
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -434,7 +434,7 @@ $(document).ready(function() {
                     return function () {
                         var result = cached_function.apply(this, arguments);
                         isTestBox = !!this.current().testData && ["copytyping", "presentation"].indexOf(this.current().template) < 0;
-                        if(!isTestBox || localStorageObject.showOnTest) {
+                        if((!isTestBox || localStorageObject.showOnTest) && this.current().learnable) {
                             setCurrentWord(this.current());
                             if(cachedData && cachedData.query !== word) {
                                 resetLocalVars();
