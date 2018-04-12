@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          https://www.memrise.com/course/*/garden/*
 // @match          https://www.memrise.com/garden/review/*
-// @version        1.2.9
+// @version        1.2.10
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -16,15 +16,14 @@ $(document).ready(function() {
 
     (function() {
         $('#left-area').append("<a data-toggle='modal' data-target='#example-settings-modal'>Example Settings</a>");
-        MEMRISE.garden.boxes.load = (function() {
-            var cached_function = MEMRISE.garden.boxes.load;
+        MEMRISE.garden.session_start = (function() {
+            var cached_function = MEMRISE.garden.session_start;
             return function() {
-                var result = cached_function.apply(this, arguments);
                 if (MEMRISE.garden.session.category.name === "Chinese (Simplified)" || MEMRISE.garden.session.category.name === "Chinese (Traditional)") {
                     console.log("enabling showing of example Chinese sentences");
                     enableExamples(MEMRISE.garden.session.category.name);
                 }
-                return result;
+                return cached_function.apply(this, arguments);
             };
         }());
 
@@ -429,36 +428,44 @@ $(document).ready(function() {
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
             function addExamples() {
-                MEMRISE.garden.boxes.activate_box = (function () {
-                    var cached_function = MEMRISE.garden.boxes.activate_box;
+                MEMRISE.garden.session.box_factory.make = (function() {
+                    var cached_function = MEMRISE.garden.session.box_factory.make;
                     return function () {
                         var result = cached_function.apply(this, arguments);
-                        isTestBox = !!this.current().testData && ["copytyping", "presentation"].indexOf(this.current().template) < 0;
-                        if((!isTestBox || localStorageObject.showOnTest) && this.current().learnable) {
-                            setCurrentWord(this.current());
-                            if(cachedData && cachedData.query !== word) {
-                                resetLocalVars();
-                            }
-                            showColouredWord();
-                            showExample();
-                        };
+                        if(result.learnable_id){
+                            isTestBox = ["copytyping", "presentation"].indexOf(result.template) < 0;
+                            if(!isTestBox || localStorageObject.showOnTest) {
+                               setCurrentWord(result);
+                               if(cachedData && cachedData.query !== word)
+                                   resetLocalVars();
+                               showColouredWord();
+                               showExample();
+                            };
+                        }
                         return result;
                     };
                 }());
             }
 
             function addWordFlash() {
-                MEMRISE.garden.boxes.deactivate_box = (function() {
-                    var cached_function = MEMRISE.garden.boxes.deactivate_box
+                MEMRISE.garden.session.make_box = (function() {
+                    var cached_function = MEMRISE.garden.session.make_box;
                     return function() {
-                        if(this.current().template !== "end_of_session") {
-                            if(isTestBox && localStorageObject.flashWord !== false) {
-                                var wordDetails = setCurrentWord(this.current());
-                                if(wordDetails) {
-                                    flashWordDetails(wordDetails);
+                        var result = cached_function.apply(this, arguments);
+                        if(result.deactivate) {
+                            result.deactivate = (function() {
+                                var cached_function = result.deactivate;
+                                return function() {
+                                    if(isTestBox && localStorageObject.flashWord !== false) {
+                                        var wordDetails = setCurrentWord(result.box_dict);
+                                        if(wordDetails) {
+                                            flashWordDetails(wordDetails);
+                                        }
+                                    }
+                                    return cached_function.apply(this, arguments);
                                 }
-                            }
-                            return cached_function.apply(this, arguments);
+                            }())
+                            return result;
                         }
                     };
                 }());
