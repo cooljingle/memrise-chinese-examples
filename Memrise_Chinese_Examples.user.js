@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          https://www.memrise.com/course/*/garden/*
 // @match          https://www.memrise.com/garden/review/*
-// @version        1.2.10
+// @version        1.2.11
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -16,16 +16,13 @@ $(document).ready(function() {
 
     (function() {
         $('#left-area').append("<a data-toggle='modal' data-target='#example-settings-modal'>Example Settings</a>");
-        MEMRISE.garden.session_start = (function() {
-            var cached_function = MEMRISE.garden.session_start;
-            return function() {
-                if (MEMRISE.garden.session.category.name === "Chinese (Simplified)" || MEMRISE.garden.session.category.name === "Chinese (Traditional)") {
-                    console.log("enabling showing of example Chinese sentences");
-                    enableExamples(MEMRISE.garden.session.category.name);
-                }
-                return cached_function.apply(this, arguments);
-            };
-        }());
+
+        MEMRISE.garden._events.start.push(() => {
+            if (MEMRISE.garden.session.category.name === "Chinese (Simplified)" || MEMRISE.garden.session.category.name === "Chinese (Traditional)") {
+                console.log("enabling showing of example Chinese sentences");
+                enableExamples(MEMRISE.garden.session.category.name);
+            }
+        });
 
         function enableExamples(lang) {
             var audioPlaying,
