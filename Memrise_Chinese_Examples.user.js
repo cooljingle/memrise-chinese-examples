@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          https://www.memrise.com/course/*/garden/*
 // @match          https://www.memrise.com/garden/review/*
-// @version        1.2.11
+// @version        1.2.12
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -27,6 +27,7 @@ $(document).ready(function() {
         function enableExamples(lang) {
             var audioPlaying,
                 cachedData,
+                chineseUnicode = /[\u2E80-\u2EFF\u3000-\u303F\u31C0-\u31EF\u3300-\u33FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\uFE30-\uFE4F]/,
                 colouredWord,
                 defaultSettings = {
                     "audioSpeed": 1,
@@ -667,7 +668,7 @@ $(document).ready(function() {
             }
 
             function isChinese(input) {
-                return typeof(input) === "string" && input.match(/^[\u2E80-\u2EFF\u3000-\u303F\u31C0-\u31EF\u3300-\u33FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\uFE30-\uFE4F]+/); //unicode ranges for Chinese
+                return typeof(input) === "string" && input.match(new RegExp(`^${chineseUnicode}+`));
             }
 
             function loadModal() {
@@ -733,16 +734,11 @@ $(document).ready(function() {
 
                 if(isTraditional && !example.traditional) {
                     simpToTrad(example.example, function(trad) {
-                        var index = 0;
-                        $(example.exampleAutolink).each(function(i, e){
-                            var innerSpan = $(e).find('span');
-                            var elem = innerSpan.length ? innerSpan : $(e);
-                            elem.text(function(i, e){
-                                var newText = trad.substring(index, index + e.length);
-                                index += e.length;
-                                return newText;
-                            });
-                        });
+                        example.exampleAutolink = example.exampleAutolink.replace(new RegExp(chineseUnicode, 'g'), _ => {
+                            var char = trad[0];
+                            trad = trad.substring(1);
+                            return char;
+                        })
                         example.traditional = true;
                         onTranslate(example);
                     });
