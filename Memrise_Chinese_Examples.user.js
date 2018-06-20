@@ -4,7 +4,7 @@
 // @description    Example sentences for learning Chinese on Memrise
 // @match          https://www.memrise.com/course/*/garden/*
 // @match          https://www.memrise.com/garden/review/*
-// @version        1.2.12
+// @version        1.2.13
 // @updateURL      https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @downloadURL    https://github.com/cooljingle/memrise-chinese-examples/raw/master/Memrise_Chinese_Examples.user.js
 // @grant          none
@@ -27,7 +27,7 @@ $(document).ready(function() {
         function enableExamples(lang) {
             var audioPlaying,
                 cachedData,
-                chineseUnicode = /[\u2E80-\u2EFF\u3000-\u303F\u31C0-\u31EF\u3300-\u33FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\uFE30-\uFE4F]/,
+                chineseUnicode = "[\u2E80-\u2EFF\u3000-\u303F\u31C0-\u31EF\u3300-\u33FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\uFE30-\uFE4F]",
                 colouredWord,
                 defaultSettings = {
                     "audioSpeed": 1,
